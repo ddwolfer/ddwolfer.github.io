@@ -2899,32 +2899,14 @@ header.special p strong {
 
 
 
-/* 首頁6張圖片 */
+/* 經歷文字對齊 */
 
 .container {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
   }
-  
-  .row {
-	display: flex;
-	flex-direction: row;
-	margin: 5px;
-  }
-  
-  .column {
-	flex: 1;
-	margin: 1px;
-  }
-  
-  img {
-	max-width: 100%;
-	width: 100%;
-	border: 1px solid #fff; /* 白色實線邊框 */
-	border-radius: 10px; /* 圓角設定 */
-	  }
-  }
+
 	  
 
 /* CTA */
