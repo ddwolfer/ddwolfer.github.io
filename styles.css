@@ -1,0 +1,22 @@
+.container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+#cards {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+#cards div {
+  width: 100px;
+  height: 150px;
+  border: 1px solid black;
+  margin: 0 10px;
+}
+
+#result {
+  margin-top: 20px;
+  font-weight: bold;
+}
