@@ -20,12 +20,12 @@ function dealCards() {
 function calculateWinner(card1, card2, card3) {
   if ((card3 > card1 && card3 < card2) || (card3 < card1 && card3 > card2)) {
     player1Score += 100;
-    return '玩家1贏';
+    return '贏';
   } else if (card3 === card1 || card3 === card2) {
     player1Score += 200;
-    return '玩家1撞柱';
+    return '撞柱';
   } else {
     player2Score += 100;
-    return '玩家2贏';
+    return '輸';
   }
 }
