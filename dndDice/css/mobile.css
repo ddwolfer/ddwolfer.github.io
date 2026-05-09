@@ -14,16 +14,8 @@ html { touch-action: manipulation; }
   }
 }
 
-/* ===== Phones (portrait, up to 480px) ===== */
-@media screen and (max-width: 480px) {
-
-  body { padding: 12px 10px; }
-
-  /* Title */
-  h1 { font-size: 22px; }
-  .subtitle { font-size: 12px; margin-bottom: 16px; }
-
-  /* Skin toggle — inline flow instead of fixed overlay */
+/* ===== Skin toggle — all mobile/tablet devices ===== */
+@media screen and (max-width: 768px) {
   .skin-toggle {
     position: static;
     flex-direction: row; align-items: center; gap: 10px;
@@ -33,10 +25,25 @@ html { touch-action: manipulation; }
   }
   .skin-toggle-label { font-size: 10px; margin-bottom: 0; }
   .skin-opt {
-    width: 32px; height: 32px; border-radius: 8px;
+    width: 34px; height: 34px; border-radius: 8px;
+  }
+  .skin-opt-tip { display: none; }
+}
+
+/* ===== Phones (portrait, up to 480px) ===== */
+@media screen and (max-width: 480px) {
+
+  body { padding: 12px 10px; }
+
+  /* Title */
+  h1 { font-size: 22px; }
+  .subtitle { font-size: 12px; margin-bottom: 16px; }
+
+  /* Skin toggle — even smaller on phones */
+  .skin-opt {
+    width: 32px; height: 32px;
   }
   .skin-opt span:first-child { font-size: 13px !important; }
-  .skin-opt-tip { display: none; } /* no hover on touch */
 
   /* Dice selector — compact grid */
   .dice-selector { gap: 6px; margin-bottom: 10px; }
