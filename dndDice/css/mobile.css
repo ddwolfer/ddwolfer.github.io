@@ -23,13 +23,19 @@ html { touch-action: manipulation; }
   h1 { font-size: 22px; }
   .subtitle { font-size: 12px; margin-bottom: 16px; }
 
-  /* Skin toggle — smaller, still fixed top-right */
-  .skin-toggle { top: 10px; right: 10px; }
-  .skin-toggle-label { font-size: 9px; }
-  .skin-opt {
-    width: 34px; height: 34px; border-radius: 8px;
+  /* Skin toggle — inline flow instead of fixed overlay */
+  .skin-toggle {
+    position: static;
+    flex-direction: row; align-items: center; gap: 10px;
+    width: 100%; max-width: 700px;
+    justify-content: flex-end;
+    margin-bottom: 4px;
   }
-  .skin-opt span:first-child { font-size: 14px !important; }
+  .skin-toggle-label { font-size: 10px; margin-bottom: 0; }
+  .skin-opt {
+    width: 32px; height: 32px; border-radius: 8px;
+  }
+  .skin-opt span:first-child { font-size: 13px !important; }
   .skin-opt-tip { display: none; } /* no hover on touch */
 
   /* Dice selector — compact grid */
