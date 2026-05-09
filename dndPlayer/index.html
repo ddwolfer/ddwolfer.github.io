@@ -797,6 +797,24 @@
                         <input type="text" id="playerName" placeholder="玩家名稱">
                     </div>
                 </div>
+                <div class="form-row-4">
+                    <div class="form-group">
+                        <label>年齡</label>
+                        <input type="number" id="age" min="0" placeholder="歲">
+                    </div>
+                    <div class="form-group">
+                        <label>身高</label>
+                        <input type="text" id="height" placeholder="如：175cm">
+                    </div>
+                    <div class="form-group">
+                        <label>體重</label>
+                        <input type="text" id="weight" placeholder="如：70kg">
+                    </div>
+                    <div class="form-group">
+                        <label>信仰</label>
+                        <input type="text" id="faith" placeholder="如：乘風之神">
+                    </div>
+                </div>
             </div>
 
             <!-- 屬性值 -->
@@ -1520,6 +1538,10 @@
                 alignment: document.getElementById('alignment').value,
                 background: document.getElementById('background').value,
                 playerName: document.getElementById('playerName').value,
+                age: document.getElementById('age').value,
+                height: document.getElementById('height').value,
+                weight: document.getElementById('weight').value,
+                faith: document.getElementById('faith').value,
                 str: document.getElementById('str').value,
                 dex: document.getElementById('dex').value,
                 con: document.getElementById('con').value,
@@ -1603,6 +1625,10 @@
             document.getElementById('alignment').value = data.alignment || '';
             document.getElementById('background').value = data.background || '';
             document.getElementById('playerName').value = data.playerName || '';
+            document.getElementById('age').value = data.age || '';
+            document.getElementById('height').value = data.height || '';
+            document.getElementById('weight').value = data.weight || '';
+            document.getElementById('faith').value = data.faith || '';
             document.getElementById('str').value = data.str || 10;
             document.getElementById('dex').value = data.dex || 10;
             document.getElementById('con').value = data.con || 10;
