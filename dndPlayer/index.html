@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DND 角色卡</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 2.5em;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #4a4a8a, #3a3a6a);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            background: linear-gradient(145deg, #5a5a9a, #4a4a7a);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #8a4a4a, #6a3a3a);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(145deg, #9a5a5a, #7a4a4a);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255,215,0,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .card.wide {
+            grid-column: span 2;
+        }
+
+        .card h2 {
+            color: #ffd700;
+            border-bottom: 2px solid rgba(255,215,0,0.3);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #aaa;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .form-row-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        /* 屬性值區塊 */
+        .attributes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .attr-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .attr-box label {
+            display: block;
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .attr-box input {
+            width: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+        }
+
+        .attr-modifier {
+            display: block;
+            margin-top: 8px;
+            font-size: 18px;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        /* 戰鬥數據 */
+        .combat-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .combat-stat {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .combat-stat label {
+            display: block;
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .combat-stat input {
+            width: 80px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 5px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+        }
+
+        /* HP 特殊樣式 */
+        .hp-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .hp-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .hp-box.current { border: 2px solid #4caf50; }
+        .hp-box.max { border: 2px solid #f44336; }
+        .hp-box.temp { border: 2px solid #2196f3; }
+
+        .hp-box label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .hp-box input {
+            width: 70px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 5px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+        }
+
+        /* ========== 戰鬥素質區塊 ========== */
+        .derived-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .derived-stat {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .derived-stat label {
+            display: block;
+            color: #aaa;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+
+        .derived-stat .value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .derived-stat.attack .value { color: #ff6b6b; }
+        .derived-stat.defense .value { color: #4ecdc4; }
+        .derived-stat.utility .value { color: #f59e0b; }
+
+        .stat-formula {
+            font-size: 9px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .class-note {
+            background: rgba(255,215,0,0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #ffd700;
+        }
+
+        /* 技能列表 */
+        .skills-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .skill-item input[type="number"] {
+            width: 36px;
+            height: 28px;
+            margin-right: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,215,0,0.4);
+            border-radius: 4px;
+            color: #ffd700;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .skill-item input[type="number"]::-webkit-inner-spin-button {
+            opacity: 1;
+        }
+
+        .skill-item .skill-mod {
+            margin-left: auto;
+            color: #4fc3f7;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        /* 豁免檢定 */
+        .saves-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .save-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+
+        .save-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            accent-color: #ffd700;
+        }
+
+        .save-item .save-mod {
+            margin-left: auto;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        /* 彈藥追蹤 */
+        .ammo-tracker {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .ammo-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        .ammo-entry .ammo-name {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 5px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 14px;
+        }
+        .ammo-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ammo-controls .ammo-count {
+            width: 55px;
+            height: 34px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid rgba(255,215,0,0.5);
+            border-radius: 6px;
+        }
+        .ammo-controls .btn-success {
+            background: #4caf50;
+        }
+        .ammo-controls .btn-success:hover {
+            background: #66bb6a;
+        }
+        .ammo-controls .btn-danger,
+        .ammo-controls .btn-success {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        /* 背包 */
+        .backpack-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .backpack-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        .backpack-entry .backpack-name {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 5px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 14px;
+        }
+        .backpack-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .backpack-controls .backpack-count {
+            width: 55px;
+            height: 34px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid rgba(255,215,0,0.5);
+            border-radius: 6px;
+        }
+        .backpack-controls .btn-success {
+            background: #4caf50;
+        }
+        .backpack-controls .btn-success:hover {
+            background: #66bb6a;
+        }
+        .backpack-controls .btn-danger,
+        .backpack-controls .btn-success {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        /* 裝備與法術列表 */
+        .item-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .item-entry {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .item-entry input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 5px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        .item-entry .btn-small {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .add-item-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* 法術欄位 */
+        .spell-slots {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .spell-slot {
+            text-align: center;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+
+        .spell-slot label {
+            display: block;
+            font-size: 11px;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+
+        .spell-slot input {
+            width: 40px;
+            text-align: center;
+            padding: 5px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 5px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+        }
+
+        /* 筆記區 */
+        .notes-area {
+            width: 100%;
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* 死亡豁免 */
+        .death-saves {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .death-save-group { text-align: center; }
+        .death-save-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .death-save-group.success label { color: #4caf50; }
+        .death-save-group.failure label { color: #f44336; }
+        .death-save-checks {
+            display: flex;
+            gap: 8px;
+        }
+        .death-save-checks input {
+            width: 24px;
+            height: 24px;
+        }
+        .death-save-group.success .death-save-checks input { accent-color: #4caf50; }
+        .death-save-group.failure .death-save-checks input { accent-color: #f44336; }
+
+        /* 熟練加值顯示 */
+        .proficiency-display {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,215,0,0.1);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .proficiency-display label {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .proficiency-display .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* ========== 能力卡片樣式 ========== */
+        .ability-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .ability-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ffd700;
+            position: relative;
+        }
+
+        .ability-card.active-skill { border-left-color: #ff6b6b; }
+        .ability-card.passive-skill { border-left-color: #4ecdc4; }
+        .ability-card.magic { border-left-color: #a855f7; }
+        .ability-card.talent { border-left-color: #f59e0b; }
+
+        .ability-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ability-card-header input {
+            flex: 1;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.4);
+            color: #ffd700;
+            margin-right: 10px;
+        }
+
+        .ability-card-body {
+            display: grid;
+            gap: 10px;
+        }
+
+        .ability-card-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .ability-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ability-field label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .ability-field input, .ability-field textarea {
+            padding: 8px;
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .ability-field textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .ability-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .ability-card .btn-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            font-size: 12px;
+            background: rgba(255,75,75,0.3);
+            border: 1px solid rgba(255,75,75,0.5);
+        }
+
+        .ability-card .btn-remove:hover {
+            background: rgba(255,75,75,0.5);
+        }
+
+        /* 滾動條樣式 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.5); }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .card.wide { grid-column: span 1; }
+            .attributes { grid-template-columns: repeat(2, 1fr); }
+            .skills-list, .saves-list { grid-template-columns: 1fr; }
+            .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+            .spell-slots { grid-template-columns: repeat(3, 1fr); }
+            .ability-card-row { grid-template-columns: 1fr; }
+            .derived-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* 列印樣式 */
+        @media print {
+            body { background: white; color: black; }
+            .card { border: 1px solid #333; background: white; }
+            .btn, .controls { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ DND 角色卡 ⚔️</h1>
+
+        <div class="controls">
+            <button class="btn" onclick="saveCharacter()">💾 儲存角色</button>
+            <button class="btn" onclick="loadCharacter()">📂 載入角色</button>
+            <button class="btn" onclick="exportCharacter()">📤 匯出 JSON</button>
+            <button class="btn" onclick="importCharacter()">📥 匯入 JSON</button>
+            <button class="btn btn-danger" onclick="clearCharacter()">🗑️ 清空資料</button>
+        </div>
+
+        <div class="grid">
+            <!-- 基本資訊 -->
+            <div class="card">
+                <h2>📋 基本資訊</h2>
+                <div class="form-group">
+                    <label>角色名稱</label>
+                    <input type="text" id="charName" placeholder="輸入角色名稱">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>種族</label>
+                        <input type="text" id="race" placeholder="如：人類、精靈">
+                    </div>
+                    <div class="form-group">
+                        <label>職業</label>
+                        <select id="class" onchange="updateDerivedStats()">
+                            <option value="">選擇職業</option>
+                            <option value="戰士">戰士</option>
+                            <option value="法師">法師</option>
+                            <option value="盜賊">盜賊</option>
+                            <option value="牧師">牧師</option>
+                            <option value="遊俠">遊俠</option>
+                            <option value="聖騎士">聖騎士</option>
+                            <option value="野蠻人">野蠻人</option>
+                            <option value="吟遊詩人">吟遊詩人</option>
+                            <option value="術士">術士</option>
+                            <option value="邪術師">邪術師</option>
+                            <option value="德魯伊">德魯伊</option>
+                            <option value="武僧">武僧</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>等級</label>
+                        <input type="number" id="level" value="1" min="1" max="20" onchange="updateProficiency()">
+                    </div>
+                    <div class="form-group">
+                        <label>經驗值</label>
+                        <input type="number" id="exp" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>陣營</label>
+                        <select id="alignment">
+                            <option value="">選擇陣營</option>
+                            <option value="守序善良">守序善良</option>
+                            <option value="中立善良">中立善良</option>
+                            <option value="混亂善良">混亂善良</option>
+                            <option value="守序中立">守序中立</option>
+                            <option value="絕對中立">絕對中立</option>
+                            <option value="混亂中立">混亂中立</option>
+                            <option value="守序邪惡">守序邪惡</option>
+                            <option value="中立邪惡">中立邪惡</option>
+                            <option value="混亂邪惡">混亂邪惡</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>背景</label>
+                        <input type="text" id="background" placeholder="如：士兵、賢者">
+                    </div>
+                    <div class="form-group">
+                        <label>玩家名稱</label>
+                        <input type="text" id="playerName" placeholder="玩家名稱">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 屬性值 -->
+            <div class="card">
+                <h2>💪 屬性值 (體魄最多20)</h2>
+                <div class="attributes">
+                    <div class="attr-box">
+                        <label>力量 (STR)</label>
+                        <input type="number" id="str" value="10" min="1" max="20" onchange="updateAll()">
+                        <span class="attr-modifier" id="strMod">+0</span>
+                    </div>
+                    <div class="attr-box">
+                        <label>敏捷 (DEX)</label>
+                        <input type="number" id="dex" value="10" min="1" max="20" onchange="updateAll()">
+                        <span class="attr-modifier" id="dexMod">+0</span>
+                    </div>
+                    <div class="attr-box">
+                        <label>體質 (CON)</label>
+                        <input type="number" id="con" value="10" min="1" max="20" onchange="updateAll()">
+                        <span class="attr-modifier" id="conMod">+0</span>
+                    </div>
+                    <div class="attr-box">
+                        <label>智力 (INT)</label>
+                        <input type="number" id="int" value="10" min="1" max="20" onchange="updateAll()">
+                        <span class="attr-modifier" id="intMod">+0</span>
+                    </div>
+                    <div class="attr-box">
+                        <label>感知 (WIS)</label>
+                        <input type="number" id="wis" value="10" min="1" max="20" onchange="updateAll()">
+                        <span class="attr-modifier" id="wisMod">+0</span>
+                    </div>
+                    <div class="attr-box">
+                        <label>魅力 (CHA)</label>
+                        <input type="number" id="cha" value="10" min="1" max="20" onchange="updateAll()">
+                        <span class="attr-modifier" id="chaMod">+0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== 戰鬥素質（GM 規則） ========== -->
+            <div class="card wide">
+                <h2>🎲 戰鬥素質 (GM 規則自動計算)</h2>
+                <div class="class-note" id="classNote">
+                    📌 正數無條件捨去，負數無條件進位，最少為 0
+                </div>
+                <div class="derived-stats">
+                    <div class="derived-stat attack">
+                        <label>物傷</label>
+                        <div class="value" id="physDmg">0</div>
+                        <div class="stat-formula">(力量-10)/2</div>
+                    </div>
+                    <div class="derived-stat attack">
+                        <label>魔攻</label>
+                        <div class="value" id="magAtk">0</div>
+                        <div class="stat-formula" id="magAtkFormula">(智力-10)/2</div>
+                    </div>
+                    <div class="derived-stat attack">
+                        <label>命中</label>
+                        <div class="value" id="hitRate">0</div>
+                        <div class="stat-formula" id="hitRateFormula">(感知-10)/2</div>
+                    </div>
+                    <div class="derived-stat defense">
+                        <label>魔抗</label>
+                        <div class="value" id="magDef">0</div>
+                        <div class="stat-formula" id="magDefFormula">(魅力-10)/2</div>
+                    </div>
+                    <div class="derived-stat defense">
+                        <label>迴避 (≤15)</label>
+                        <div class="value" id="dodge">10</div>
+                        <div class="stat-formula">(敏捷+10)/2</div>
+                    </div>
+                    <div class="derived-stat defense">
+                        <label>強韌</label>
+                        <div class="value" id="fortitude">0</div>
+                        <div class="stat-formula">(力+體)/4</div>
+                    </div>
+                    <div class="derived-stat defense">
+                        <label>反射</label>
+                        <div class="value" id="reflex">0</div>
+                        <div class="stat-formula">(敏+魅)/4</div>
+                    </div>
+                    <div class="derived-stat defense">
+                        <label>意志</label>
+                        <div class="value" id="willpower">0</div>
+                        <div class="stat-formula">(感+智)/4</div>
+                    </div>
+                    <div class="derived-stat utility">
+                        <label>先攻</label>
+                        <div class="value" id="initCalc">0</div>
+                        <div class="stat-formula">敏捷/2</div>
+                    </div>
+                    <div class="derived-stat utility">
+                        <label>負重</label>
+                        <div class="value" id="carry">0</div>
+                        <div class="stat-formula">力量+體質</div>
+                    </div>
+                    <div class="derived-stat utility">
+                        <label>移動力</label>
+                        <div class="value" id="movement">3</div>
+                        <div class="stat-formula">預設3格</div>
+                    </div>
+                    <div class="derived-stat utility">
+                        <label>法術影響力</label>
+                        <div class="value" id="spellInfluence">8</div>
+                        <div class="stat-formula">8+施法屬性調整值</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 戰鬥數據 -->
+            <div class="card">
+                <h2>⚔️ 戰鬥數據</h2>
+                <div class="proficiency-display">
+                    <label>熟練加值</label>
+                    <div class="value" id="profBonus">+2</div>
+                </div>
+                <div class="hp-section">
+                    <div class="hp-box current">
+                        <label style="color: #4caf50;">當前 HP</label>
+                        <input type="number" id="currentHp" value="10">
+                    </div>
+                    <div class="hp-box max">
+                        <label style="color: #f44336;">最大 HP</label>
+                        <input type="number" id="maxHp" value="10">
+                    </div>
+                    <div class="hp-box temp">
+                        <label style="color: #2196f3;">臨時 HP</label>
+                        <input type="number" id="tempHp" value="0">
+                    </div>
+                </div>
+                <div class="combat-stats">
+                    <div class="combat-stat">
+                        <label>護甲等級 (AC)</label>
+                        <input type="number" id="ac" value="10">
+                    </div>
+                    <div class="combat-stat">
+                        <label>先攻加值 (手動)</label>
+                        <input type="number" id="initiative" value="0">
+                    </div>
+                    <div class="combat-stat">
+                        <label>速度 (尺)</label>
+                        <input type="number" id="speed" value="30">
+                    </div>
+                    <div class="combat-stat">
+                        <label>生命骰</label>
+                        <input type="text" id="hitDice" placeholder="1d10">
+                    </div>
+                </div>
+                <div class="death-saves">
+                    <div class="death-save-group success">
+                        <label>成功</label>
+                        <div class="death-save-checks">
+                            <input type="checkbox" id="deathSuccess1">
+                            <input type="checkbox" id="deathSuccess2">
+                            <input type="checkbox" id="deathSuccess3">
+                        </div>
+                    </div>
+                    <div class="death-save-group failure">
+                        <label>失敗</label>
+                        <div class="death-save-checks">
+                            <input type="checkbox" id="deathFail1">
+                            <input type="checkbox" id="deathFail2">
+                            <input type="checkbox" id="deathFail3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 豁免檢定 -->
+            <div class="card">
+                <h2>🛡️ 豁免檢定 (勾選=熟練)</h2>
+                <div class="saves-list">
+                    <div class="save-item">
+                        <input type="checkbox" id="saveStrProf" onchange="updateModifiers()">
+                        <span>力量</span>
+                        <span class="save-mod" id="saveStr">+0</span>
+                    </div>
+                    <div class="save-item">
+                        <input type="checkbox" id="saveDexProf" onchange="updateModifiers()">
+                        <span>敏捷</span>
+                        <span class="save-mod" id="saveDex">+0</span>
+                    </div>
+                    <div class="save-item">
+                        <input type="checkbox" id="saveConProf" onchange="updateModifiers()">
+                        <span>體質</span>
+                        <span class="save-mod" id="saveCon">+0</span>
+                    </div>
+                    <div class="save-item">
+                        <input type="checkbox" id="saveIntProf" onchange="updateModifiers()">
+                        <span>智力</span>
+                        <span class="save-mod" id="saveInt">+0</span>
+                    </div>
+                    <div class="save-item">
+                        <input type="checkbox" id="saveWisProf" onchange="updateModifiers()">
+                        <span>感知</span>
+                        <span class="save-mod" id="saveWis">+0</span>
+                    </div>
+                    <div class="save-item">
+                        <input type="checkbox" id="saveChaProf" onchange="updateModifiers()">
+                        <span>魅力</span>
+                        <span class="save-mod" id="saveCha">+0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 技能 -->
+            <div class="card">
+                <h2>🎯 技能檢定</h2>
+                <div class="skills-list" id="skillsList"></div>
+            </div>
+
+            <!-- 裝備 -->
+            <div class="card">
+                <h2>🎒 裝備與物品</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>金幣 (GP)</label>
+                        <input type="number" id="gold" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>銀幣 (SP)</label>
+                        <input type="number" id="silver" value="0" min="0">
+                    </div>
+                </div>
+                <div class="item-list" id="equipmentList">
+                    <div class="item-entry">
+                        <input type="text" placeholder="裝備名稱" class="equipment-item">
+                        <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+                    </div>
+                </div>
+                <button class="btn add-item-btn" onclick="addEquipment()">+ 新增裝備</button>
+            </div>
+
+            <!-- 背包 -->
+            <div class="card">
+                <h2>🎒 背包</h2>
+                <div class="backpack-list" id="backpackList">
+                    <div class="backpack-entry">
+                        <input type="text" placeholder="物品名稱" class="backpack-name">
+                        <div class="backpack-controls">
+                            <button class="btn btn-small btn-danger" onclick="changeBackpack(this, -1)">−</button>
+                            <input type="number" class="backpack-count" value="1" min="0">
+                            <button class="btn btn-small btn-success" onclick="changeBackpack(this, 1)">+</button>
+                        </div>
+                        <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+                    </div>
+                </div>
+                <button class="btn add-item-btn" onclick="addBackpackItem()">+ 新增物品</button>
+            </div>
+
+            <!-- 彈藥追蹤 -->
+            <div class="card">
+                <h2>🏹 彈藥追蹤</h2>
+                <div class="ammo-tracker" id="ammoList">
+                    <div class="ammo-entry">
+                        <input type="text" placeholder="彈藥名稱 (如：箭矢)" class="ammo-name" value="箭矢">
+                        <div class="ammo-controls">
+                            <button class="btn btn-small btn-danger" onclick="changeAmmo(this, -1)">−</button>
+                            <input type="number" class="ammo-count" value="20" min="0">
+                            <button class="btn btn-small btn-success" onclick="changeAmmo(this, 1)">+</button>
+                        </div>
+                        <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+                    </div>
+                </div>
+                <button class="btn add-item-btn" onclick="addAmmo()">+ 新增彈藥</button>
+            </div>
+
+            <!-- 主動技能 -->
+            <div class="card wide">
+                <h2>⚡ 主動技能</h2>
+                <div class="ability-list" id="activeSkillsList"></div>
+                <button class="btn add-item-btn" onclick="addAbility('activeSkills', 'active-skill')">+ 新增主動技能</button>
+            </div>
+
+            <!-- 被動技能 -->
+            <div class="card wide">
+                <h2>🔰 被動技能</h2>
+                <div class="ability-list" id="passiveSkillsList"></div>
+                <button class="btn add-item-btn" onclick="addAbility('passiveSkills', 'passive-skill')">+ 新增被動技能</button>
+            </div>
+
+            <!-- 魔法 -->
+            <div class="card wide">
+                <h2>✨ 魔法</h2>
+                <div class="form-row-4">
+                    <div class="form-group">
+                        <label>施法屬性</label>
+                        <select id="spellcastingAbility" onchange="updateDerivedStats()">
+                            <option value="">選擇</option>
+                            <option value="int">智力</option>
+                            <option value="wis">感知</option>
+                            <option value="cha">魅力</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>法術豁免 DC</label>
+                        <input type="number" id="spellDC" value="8">
+                    </div>
+                    <div class="form-group">
+                        <label>法術攻擊加值</label>
+                        <input type="number" id="spellAttack" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>魔力值 / 法術位</label>
+                        <input type="text" id="manaPool" placeholder="如: 10/10">
+                    </div>
+                </div>
+                <h3 style="color: #aaa; font-size: 14px; margin: 15px 0 10px;">法術位 (已用/總數)</h3>
+                <div class="spell-slots">
+                    <div class="spell-slot"><label>1環</label><input type="text" id="slot1" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>2環</label><input type="text" id="slot2" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>3環</label><input type="text" id="slot3" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>4環</label><input type="text" id="slot4" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>5環</label><input type="text" id="slot5" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>6環</label><input type="text" id="slot6" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>7環</label><input type="text" id="slot7" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>8環</label><input type="text" id="slot8" placeholder="0/0"></div>
+                    <div class="spell-slot"><label>9環</label><input type="text" id="slot9" placeholder="0/0"></div>
+                </div>
+                <div class="ability-list" id="magicList"></div>
+                <button class="btn add-item-btn" onclick="addAbility('magic', 'magic')">+ 新增魔法</button>
+            </div>
+
+            <!-- 天賦 -->
+            <div class="card wide">
+                <h2>🌟 天賦</h2>
+                <div class="ability-list" id="talentsList"></div>
+                <button class="btn add-item-btn" onclick="addAbility('talents', 'talent')">+ 新增天賦</button>
+            </div>
+
+            <!-- 特性與能力 -->
+            <div class="card">
+                <h2>📜 種族與職業特性</h2>
+                <div class="form-group">
+                    <label>種族特性</label>
+                    <textarea id="racialTraits" class="notes-area" placeholder="記錄種族特性..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>職業特性</label>
+                    <textarea id="classFeatures" class="notes-area" placeholder="記錄職業特性..."></textarea>
+                </div>
+            </div>
+
+            <!-- 筆記 -->
+            <div class="card">
+                <h2>📝 筆記</h2>
+                <div class="form-group">
+                    <label>角色背景故事</label>
+                    <textarea id="backstory" class="notes-area" placeholder="記錄角色背景故事..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>冒險筆記</label>
+                    <textarea id="adventureNotes" class="notes-area" placeholder="記錄冒險中的重要事件..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>NPC 與聯繫人</label>
+                    <textarea id="npcNotes" class="notes-area" placeholder="記錄認識的 NPC..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 技能列表與對應屬性
+        const skills = [
+            { name: '運動', attr: 'str', id: 'athletics' },
+            { name: '特技', attr: 'dex', id: 'acrobatics' },
+            { name: '巧手', attr: 'dex', id: 'sleightOfHand' },
+            { name: '隱匿', attr: 'dex', id: 'stealth' },
+            { name: '奧秘', attr: 'int', id: 'arcana' },
+            { name: '歷史', attr: 'int', id: 'history' },
+            { name: '調查', attr: 'int', id: 'investigation' },
+            { name: '自然', attr: 'int', id: 'nature' },
+            { name: '宗教', attr: 'int', id: 'religion' },
+            { name: '馴獸', attr: 'wis', id: 'animalHandling' },
+            { name: '洞悉', attr: 'wis', id: 'insight' },
+            { name: '醫療', attr: 'wis', id: 'medicine' },
+            { name: '察覺', attr: 'wis', id: 'perception' },
+            { name: '求生', attr: 'wis', id: 'survival' },
+            { name: '欺瞞', attr: 'cha', id: 'deception' },
+            { name: '威嚇', attr: 'cha', id: 'intimidation' },
+            { name: '表演', attr: 'cha', id: 'performance' },
+            { name: '說服', attr: 'cha', id: 'persuasion' }
+        ];
+
+        function initSkills() {
+            const container = document.getElementById('skillsList');
+            container.innerHTML = '';
+            skills.forEach(skill => {
+                const div = document.createElement('div');
+                div.className = 'skill-item';
+                div.innerHTML = `
+                    <input type="number" id="${skill.id}Prof" min="0" value="0" onchange="updateModifiers()" oninput="updateModifiers()">
+                    <span>${skill.name} (${skill.attr.toUpperCase()})</span>
+                    <span class="skill-mod" id="${skill.id}Mod">+0</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // GM 規則：統一往低取整（-0.5 → -1，0.5 → 0）
+        function gmRound(value) {
+            return Math.floor(value);
+        }
+
+        // 確保最小值為 0
+        function minZero(value) {
+            return Math.max(0, value);
+        }
+
+        function calcMod(score) {
+            return gmRound((score - 10) / 2);
+        }
+
+        function formatMod(mod) {
+            return mod >= 0 ? `+${mod}` : `${mod}`;
+        }
+
+        function getProfBonus() {
+            const level = parseInt(document.getElementById('level').value) || 1;
+            return Math.floor((level - 1) / 4) + 2;
+        }
+
+        function updateProficiency() {
+            document.getElementById('profBonus').textContent = formatMod(getProfBonus());
+            updateModifiers();
+        }
+
+        function updateAll() {
+            updateModifiers();
+            updateDerivedStats();
+        }
+
+        function updateModifiers() {
+            const profBonus = getProfBonus();
+            const attrs = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+            const mods = {};
+
+            attrs.forEach(attr => {
+                const score = parseInt(document.getElementById(attr).value) || 10;
+                mods[attr] = calcMod(score);
+                document.getElementById(`${attr}Mod`).textContent = formatMod(mods[attr]);
+            });
+
+            attrs.forEach(attr => {
+                const attrName = attr.charAt(0).toUpperCase() + attr.slice(1);
+                const isProf = document.getElementById(`save${attrName}Prof`).checked;
+                document.getElementById(`save${attrName}`).textContent = formatMod(mods[attr] + (isProf ? profBonus : 0));
+            });
+
+            skills.forEach(skill => {
+                const profLevel = parseInt(document.getElementById(`${skill.id}Prof`).value) || 0;
+                document.getElementById(`${skill.id}Mod`).textContent = formatMod(mods[skill.attr] + profLevel * profBonus);
+            });
+
+            updateDerivedStats();
+        }
+
+        // ========== GM 規則戰鬥素質計算 ==========
+        function updateDerivedStats() {
+            const str = parseInt(document.getElementById('str').value) || 10;
+            const dex = parseInt(document.getElementById('dex').value) || 10;
+            const con = parseInt(document.getElementById('con').value) || 10;
+            const int = parseInt(document.getElementById('int').value) || 10;
+            const wis = parseInt(document.getElementById('wis').value) || 10;
+            const cha = parseInt(document.getElementById('cha').value) || 10;
+
+            const charClass = document.getElementById('class').value;
+            const spellAttr = document.getElementById('spellcastingAbility').value;
+
+            // 判斷職業特殊規則
+            const isBard = charClass === '吟遊詩人';
+            const isDruidOrCleric = charClass === '德魯伊' || charClass === '牧師';
+
+            // 更新提示
+            let note = '📌 統一往低取整（-0.5→-1，0.5→0），僅魔抗最少為0';
+            if (isBard) {
+                note += '<br>🎵 詩人：魔攻用魅力，魔抗用智力';
+            }
+            if (isDruidOrCleric) {
+                note += '<br>🌿 德魯伊/牧師：命中和魔攻互換';
+            }
+            document.getElementById('classNote').innerHTML = note;
+
+            // 物傷 = (力量-10)/2（可為負）
+            const physDmg = gmRound((str - 10) / 2);
+            document.getElementById('physDmg').textContent = physDmg;
+
+            // 魔攻 = (智力-10)/2，詩人用魅力，德魯伊/牧師用感知（可為負）
+            let magAtk, magAtkFormula;
+            if (isBard) {
+                magAtk = gmRound((cha - 10) / 2);
+                magAtkFormula = '(魅力-10)/2 [詩人]';
+            } else if (isDruidOrCleric) {
+                magAtk = gmRound((wis - 10) / 2);
+                magAtkFormula = '(感知-10)/2 [德/牧]';
+            } else {
+                magAtk = gmRound((int - 10) / 2);
+                magAtkFormula = '(智力-10)/2';
+            }
+            document.getElementById('magAtk').textContent = magAtk;
+            document.getElementById('magAtkFormula').textContent = magAtkFormula;
+
+            // 命中 = (感知-10)/2，德魯伊/牧師用智力（可為負）
+            let hitRate, hitRateFormula;
+            if (isDruidOrCleric) {
+                hitRate = gmRound((int - 10) / 2);
+                hitRateFormula = '(智力-10)/2 [德/牧]';
+            } else {
+                hitRate = gmRound((wis - 10) / 2);
+                hitRateFormula = '(感知-10)/2';
+            }
+            document.getElementById('hitRate').textContent = hitRate;
+            document.getElementById('hitRateFormula').textContent = hitRateFormula;
+
+            // 魔抗 = (魅力-10)/2，詩人用智力（最少為0）
+            let magDef, magDefFormula;
+            if (isBard) {
+                magDef = minZero(gmRound((int - 10) / 2));
+                magDefFormula = '(智力-10)/2 [詩人]';
+            } else {
+                magDef = minZero(gmRound((cha - 10) / 2));
+                magDefFormula = '(魅力-10)/2';
+            }
+            document.getElementById('magDef').textContent = magDef;
+            document.getElementById('magDefFormula').textContent = magDefFormula;
+
+            // 迴避 = (敏捷+10)/2，最多15
+            const dodge = Math.min(15, gmRound((dex + 10) / 2));
+            document.getElementById('dodge').textContent = dodge;
+
+            // 強韌 = (力+體)/4（可為負）
+            const fortitude = gmRound((str + con) / 4);
+            document.getElementById('fortitude').textContent = fortitude;
+
+            // 反射 = (敏+魅)/4（可為負）
+            const reflex = gmRound((dex + cha) / 4);
+            document.getElementById('reflex').textContent = reflex;
+
+            // 意志 = (感+智)/4（可為負）
+            const willpower = gmRound((wis + int) / 4);
+            document.getElementById('willpower').textContent = willpower;
+
+            // 先攻 = 敏捷/2
+            const initCalc = gmRound(dex / 2);
+            document.getElementById('initCalc').textContent = initCalc;
+
+            // 負重 = 力量+體質
+            const carry = str + con;
+            document.getElementById('carry').textContent = carry;
+
+            // 移動力預設為3
+            document.getElementById('movement').textContent = 3;
+
+            // 法術影響力 = 8 + 施法屬性調整值
+            let spellInfluence = 8;
+            if (spellAttr) {
+                const spellMod = calcMod(parseInt(document.getElementById(spellAttr).value) || 10);
+                spellInfluence = 8 + spellMod;
+            }
+            document.getElementById('spellInfluence').textContent = spellInfluence;
+        }
+
+        function addEquipment() {
+            const list = document.getElementById('equipmentList');
+            const div = document.createElement('div');
+            div.className = 'item-entry';
+            div.innerHTML = `
+                <input type="text" placeholder="裝備名稱" class="equipment-item">
+                <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+            `;
+            list.appendChild(div);
+        }
+
+        function removeItem(btn) { btn.parentElement.remove(); }
+
+        // ========== 彈藥追蹤功能 ==========
+        function addAmmo() {
+            const list = document.getElementById('ammoList');
+            const div = document.createElement('div');
+            div.className = 'ammo-entry';
+            div.innerHTML = `
+                <input type="text" placeholder="彈藥名稱 (如：箭矢)" class="ammo-name">
+                <div class="ammo-controls">
+                    <button class="btn btn-small btn-danger" onclick="changeAmmo(this, -1)">−</button>
+                    <input type="number" class="ammo-count" value="20" min="0">
+                    <button class="btn btn-small btn-success" onclick="changeAmmo(this, 1)">+</button>
+                </div>
+                <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+            `;
+            list.appendChild(div);
+        }
+
+        function changeAmmo(btn, delta) {
+            const controls = btn.closest('.ammo-controls');
+            const input = controls.querySelector('.ammo-count');
+            const newVal = Math.max(0, (parseInt(input.value) || 0) + delta);
+            input.value = newVal;
+        }
+
+        // ========== 背包功能 ==========
+        function addBackpackItem() {
+            const list = document.getElementById('backpackList');
+            const div = document.createElement('div');
+            div.className = 'backpack-entry';
+            div.innerHTML = `
+                <input type="text" placeholder="物品名稱" class="backpack-name">
+                <div class="backpack-controls">
+                    <button class="btn btn-small btn-danger" onclick="changeBackpack(this, -1)">−</button>
+                    <input type="number" class="backpack-count" value="1" min="0">
+                    <button class="btn btn-small btn-success" onclick="changeBackpack(this, 1)">+</button>
+                </div>
+                <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+            `;
+            list.appendChild(div);
+        }
+
+        function changeBackpack(btn, delta) {
+            const controls = btn.closest('.backpack-controls');
+            const input = controls.querySelector('.backpack-count');
+            const newVal = Math.max(0, (parseInt(input.value) || 0) + delta);
+            input.value = newVal;
+        }
+
+        // ========== 能力卡片功能 ==========
+        function createAbilityCard(type, data = {}) {
+            const card = document.createElement('div');
+            card.className = `ability-card ${type}`;
+            card.innerHTML = `
+                <button class="btn btn-small btn-danger btn-remove" onclick="this.parentElement.remove()">✕</button>
+                <div class="ability-card-header">
+                    <input type="text" class="ability-name" placeholder="技能/能力名稱" value="${data.name || ''}">
+                </div>
+                <div class="ability-card-body">
+                    <div class="ability-field full-width">
+                        <label>效用 / 描述</label>
+                        <textarea class="ability-effect" placeholder="描述這個能力的效果...">${data.effect || ''}</textarea>
+                    </div>
+                    <div class="ability-card-row">
+                        <div class="ability-field">
+                            <label>冷卻時間 (CD)</label>
+                            <input type="text" class="ability-cd" placeholder="如: 1回合、長休" value="${data.cd || ''}">
+                        </div>
+                        <div class="ability-field">
+                            <label>消耗</label>
+                            <input type="text" class="ability-cost" placeholder="如: 2點法術位、反應" value="${data.cost || ''}">
+                        </div>
+                        <div class="ability-field">
+                            <label>範圍 / 距離</label>
+                            <input type="text" class="ability-range" placeholder="如: 30尺、自身" value="${data.range || ''}">
+                        </div>
+                    </div>
+                    <div class="ability-card-row">
+                        <div class="ability-field">
+                            <label>持續時間</label>
+                            <input type="text" class="ability-duration" placeholder="如: 1分鐘、專注" value="${data.duration || ''}">
+                        </div>
+                        <div class="ability-field">
+                            <label>傷害 / 骰數</label>
+                            <input type="text" class="ability-damage" placeholder="如: 2d6火焰" value="${data.damage || ''}">
+                        </div>
+                        <div class="ability-field">
+                            <label>使用次數</label>
+                            <input type="text" class="ability-uses" placeholder="如: 3/3" value="${data.uses || ''}">
+                        </div>
+                    </div>
+                    <div class="ability-field full-width">
+                        <label>備註</label>
+                        <input type="text" class="ability-notes" placeholder="其他備註..." value="${data.notes || ''}">
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function addAbility(listType, cardType) {
+            const listId = {
+                'activeSkills': 'activeSkillsList',
+                'passiveSkills': 'passiveSkillsList',
+                'magic': 'magicList',
+                'talents': 'talentsList'
+            }[listType];
+            const list = document.getElementById(listId);
+            list.appendChild(createAbilityCard(cardType));
+        }
+
+        function collectAbilities(listId) {
+            const abilities = [];
+            document.querySelectorAll(`#${listId} .ability-card`).forEach(card => {
+                abilities.push({
+                    name: card.querySelector('.ability-name').value,
+                    effect: card.querySelector('.ability-effect').value,
+                    cd: card.querySelector('.ability-cd').value,
+                    cost: card.querySelector('.ability-cost').value,
+                    range: card.querySelector('.ability-range').value,
+                    duration: card.querySelector('.ability-duration').value,
+                    damage: card.querySelector('.ability-damage').value,
+                    uses: card.querySelector('.ability-uses').value,
+                    notes: card.querySelector('.ability-notes').value
+                });
+            });
+            return abilities;
+        }
+
+        function loadAbilities(listId, cardType, abilities) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            if (abilities && abilities.length > 0) {
+                abilities.forEach(data => list.appendChild(createAbilityCard(cardType, data)));
+            }
+        }
+
+        // ========== 資料收集與載入 ==========
+        function collectData() {
+            const data = {
+                charName: document.getElementById('charName').value,
+                race: document.getElementById('race').value,
+                class: document.getElementById('class').value,
+                level: document.getElementById('level').value,
+                exp: document.getElementById('exp').value,
+                alignment: document.getElementById('alignment').value,
+                background: document.getElementById('background').value,
+                playerName: document.getElementById('playerName').value,
+                str: document.getElementById('str').value,
+                dex: document.getElementById('dex').value,
+                con: document.getElementById('con').value,
+                int: document.getElementById('int').value,
+                wis: document.getElementById('wis').value,
+                cha: document.getElementById('cha').value,
+                currentHp: document.getElementById('currentHp').value,
+                maxHp: document.getElementById('maxHp').value,
+                tempHp: document.getElementById('tempHp').value,
+                ac: document.getElementById('ac').value,
+                initiative: document.getElementById('initiative').value,
+                speed: document.getElementById('speed').value,
+                hitDice: document.getElementById('hitDice').value,
+                deathSuccess1: document.getElementById('deathSuccess1').checked,
+                deathSuccess2: document.getElementById('deathSuccess2').checked,
+                deathSuccess3: document.getElementById('deathSuccess3').checked,
+                deathFail1: document.getElementById('deathFail1').checked,
+                deathFail2: document.getElementById('deathFail2').checked,
+                deathFail3: document.getElementById('deathFail3').checked,
+                saveStrProf: document.getElementById('saveStrProf').checked,
+                saveDexProf: document.getElementById('saveDexProf').checked,
+                saveConProf: document.getElementById('saveConProf').checked,
+                saveIntProf: document.getElementById('saveIntProf').checked,
+                saveWisProf: document.getElementById('saveWisProf').checked,
+                saveChaProf: document.getElementById('saveChaProf').checked,
+                skillProficiencies: {},
+                gold: document.getElementById('gold').value,
+                silver: document.getElementById('silver').value,
+                equipment: [],
+                spellcastingAbility: document.getElementById('spellcastingAbility').value,
+                spellDC: document.getElementById('spellDC').value,
+                spellAttack: document.getElementById('spellAttack').value,
+                manaPool: document.getElementById('manaPool').value,
+                spellSlots: {},
+                activeSkills: collectAbilities('activeSkillsList'),
+                passiveSkills: collectAbilities('passiveSkillsList'),
+                magic: collectAbilities('magicList'),
+                talents: collectAbilities('talentsList'),
+                racialTraits: document.getElementById('racialTraits').value,
+                classFeatures: document.getElementById('classFeatures').value,
+                backstory: document.getElementById('backstory').value,
+                adventureNotes: document.getElementById('adventureNotes').value,
+                npcNotes: document.getElementById('npcNotes').value
+            };
+
+            skills.forEach(skill => {
+                data.skillProficiencies[skill.id] = parseInt(document.getElementById(`${skill.id}Prof`).value) || 0;
+            });
+
+            document.querySelectorAll('.equipment-item').forEach(input => {
+                if (input.value.trim()) data.equipment.push(input.value);
+            });
+
+            data.backpack = [];
+            document.querySelectorAll('.backpack-entry').forEach(entry => {
+                const name = entry.querySelector('.backpack-name').value.trim();
+                const count = parseInt(entry.querySelector('.backpack-count').value) || 0;
+                if (name) data.backpack.push({ name, count });
+            });
+
+            data.ammo = [];
+            document.querySelectorAll('.ammo-entry').forEach(entry => {
+                const name = entry.querySelector('.ammo-name').value.trim();
+                const count = parseInt(entry.querySelector('.ammo-count').value) || 0;
+                if (name) data.ammo.push({ name, count });
+            });
+
+            for (let i = 1; i <= 9; i++) {
+                data.spellSlots[`slot${i}`] = document.getElementById(`slot${i}`).value;
+            }
+
+            return data;
+        }
+
+        function loadData(data) {
+            document.getElementById('charName').value = data.charName || '';
+            document.getElementById('race').value = data.race || '';
+            document.getElementById('class').value = data.class || '';
+            document.getElementById('level').value = data.level || 1;
+            document.getElementById('exp').value = data.exp || 0;
+            document.getElementById('alignment').value = data.alignment || '';
+            document.getElementById('background').value = data.background || '';
+            document.getElementById('playerName').value = data.playerName || '';
+            document.getElementById('str').value = data.str || 10;
+            document.getElementById('dex').value = data.dex || 10;
+            document.getElementById('con').value = data.con || 10;
+            document.getElementById('int').value = data.int || 10;
+            document.getElementById('wis').value = data.wis || 10;
+            document.getElementById('cha').value = data.cha || 10;
+            document.getElementById('currentHp').value = data.currentHp || 10;
+            document.getElementById('maxHp').value = data.maxHp || 10;
+            document.getElementById('tempHp').value = data.tempHp || 0;
+            document.getElementById('ac').value = data.ac || 10;
+            document.getElementById('initiative').value = data.initiative || 0;
+            document.getElementById('speed').value = data.speed || 30;
+            document.getElementById('hitDice').value = data.hitDice || '';
+            document.getElementById('deathSuccess1').checked = data.deathSuccess1 || false;
+            document.getElementById('deathSuccess2').checked = data.deathSuccess2 || false;
+            document.getElementById('deathSuccess3').checked = data.deathSuccess3 || false;
+            document.getElementById('deathFail1').checked = data.deathFail1 || false;
+            document.getElementById('deathFail2').checked = data.deathFail2 || false;
+            document.getElementById('deathFail3').checked = data.deathFail3 || false;
+            document.getElementById('saveStrProf').checked = data.saveStrProf || false;
+            document.getElementById('saveDexProf').checked = data.saveDexProf || false;
+            document.getElementById('saveConProf').checked = data.saveConProf || false;
+            document.getElementById('saveIntProf').checked = data.saveIntProf || false;
+            document.getElementById('saveWisProf').checked = data.saveWisProf || false;
+            document.getElementById('saveChaProf').checked = data.saveChaProf || false;
+
+            if (data.skillProficiencies) {
+                skills.forEach(skill => {
+                    const el = document.getElementById(`${skill.id}Prof`);
+                    if (el) {
+                        const val = data.skillProficiencies[skill.id];
+                        el.value = (typeof val === 'boolean') ? (val ? 1 : 0) : (val || 0);
+                    }
+                });
+            }
+
+            document.getElementById('gold').value = data.gold || 0;
+            document.getElementById('silver').value = data.silver || 0;
+
+            const equipList = document.getElementById('equipmentList');
+            equipList.innerHTML = '';
+            if (data.equipment && data.equipment.length > 0) {
+                data.equipment.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'item-entry';
+                    div.innerHTML = `
+                        <input type="text" placeholder="裝備名稱" class="equipment-item" value="${item}">
+                        <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+                    `;
+                    equipList.appendChild(div);
+                });
+            } else {
+                addEquipment();
+            }
+
+            const backpackList = document.getElementById('backpackList');
+            backpackList.innerHTML = '';
+            if (data.backpack && data.backpack.length > 0) {
+                data.backpack.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'backpack-entry';
+                    div.innerHTML = `
+                        <input type="text" placeholder="物品名稱" class="backpack-name" value="${item.name}">
+                        <div class="backpack-controls">
+                            <button class="btn btn-small btn-danger" onclick="changeBackpack(this, -1)">−</button>
+                            <input type="number" class="backpack-count" value="${item.count}" min="0">
+                            <button class="btn btn-small btn-success" onclick="changeBackpack(this, 1)">+</button>
+                        </div>
+                        <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+                    `;
+                    backpackList.appendChild(div);
+                });
+            } else {
+                addBackpackItem();
+            }
+
+            const ammoList = document.getElementById('ammoList');
+            ammoList.innerHTML = '';
+            if (data.ammo && data.ammo.length > 0) {
+                data.ammo.forEach(ammo => {
+                    const div = document.createElement('div');
+                    div.className = 'ammo-entry';
+                    div.innerHTML = `
+                        <input type="text" placeholder="彈藥名稱 (如：箭矢)" class="ammo-name" value="${ammo.name}">
+                        <div class="ammo-controls">
+                            <button class="btn btn-small btn-danger" onclick="changeAmmo(this, -1)">−</button>
+                            <input type="number" class="ammo-count" value="${ammo.count}" min="0">
+                            <button class="btn btn-small btn-success" onclick="changeAmmo(this, 1)">+</button>
+                        </div>
+                        <button class="btn btn-small btn-danger" onclick="removeItem(this)">✕</button>
+                    `;
+                    ammoList.appendChild(div);
+                });
+            } else {
+                addAmmo();
+            }
+
+            document.getElementById('spellcastingAbility').value = data.spellcastingAbility || '';
+            document.getElementById('spellDC').value = data.spellDC || 8;
+            document.getElementById('spellAttack').value = data.spellAttack || 0;
+            document.getElementById('manaPool').value = data.manaPool || '';
+
+            if (data.spellSlots) {
+                for (let i = 1; i <= 9; i++) {
+                    document.getElementById(`slot${i}`).value = data.spellSlots[`slot${i}`] || '';
+                }
+            }
+
+            loadAbilities('activeSkillsList', 'active-skill', data.activeSkills);
+            loadAbilities('passiveSkillsList', 'passive-skill', data.passiveSkills);
+            loadAbilities('magicList', 'magic', data.magic);
+            loadAbilities('talentsList', 'talent', data.talents);
+
+            document.getElementById('racialTraits').value = data.racialTraits || '';
+            document.getElementById('classFeatures').value = data.classFeatures || '';
+            document.getElementById('backstory').value = data.backstory || '';
+            document.getElementById('adventureNotes').value = data.adventureNotes || '';
+            document.getElementById('npcNotes').value = data.npcNotes || '';
+
+            updateProficiency();
+            updateAll();
+        }
+
+        function saveCharacter() {
+            localStorage.setItem('dndCharacter', JSON.stringify(collectData()));
+            alert('角色已儲存！');
+        }
+
+        function loadCharacter() {
+            const saved = localStorage.getItem('dndCharacter');
+            if (saved) {
+                loadData(JSON.parse(saved));
+                alert('角色已載入！');
+            } else {
+                alert('沒有找到已儲存的角色資料。');
+            }
+        }
+
+        function exportCharacter() {
+            const data = collectData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${data.charName || 'character'}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importCharacter() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        loadData(JSON.parse(event.target.result));
+                        alert('角色已匯入！');
+                    } catch (err) {
+                        alert('無法讀取檔案，請確認是有效的 JSON 格式。');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function clearCharacter() {
+            if (confirm('確定要清空所有資料嗎？此操作無法復原。')) {
+                localStorage.removeItem('dndCharacter');
+                location.reload();
+            }
+        }
+
+        window.onload = function() {
+            initSkills();
+            updateProficiency();
+            updateAll();
+            const saved = localStorage.getItem('dndCharacter');
+            if (saved) loadData(JSON.parse(saved));
+        };
+
+        setInterval(() => {
+            localStorage.setItem('dndCharacter', JSON.stringify(collectData()));
+        }, 30000);
+    </script>
+</body>
+</html>
