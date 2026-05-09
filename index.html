@@ -1,22 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>射龍門</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<title>Game Hub</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Noto Sans TC', sans-serif;
+    background: #1a1a2e;
+    color: #e8eaed;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  h1 {
+    font-size: 36px; margin-bottom: 8px;
+    background: linear-gradient(135deg, #ff9800, #8ab4f8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle { color: #9aa0a6; font-size: 14px; margin-bottom: 48px; }
+  .games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px; width: 100%; max-width: 700px;
+  }
+  .game-card {
+    background: #16213e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-decoration: none; color: inherit;
+    transition: all 0.25s;
+    display: flex; flex-direction: column; gap: 12px;
+    position: relative; overflow: hidden;
+  }
+  .game-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    border-radius: 16px 16px 0 0;
+  }
+  .game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .game-card:active { transform: translateY(-1px); }
+  .game-icon { font-size: 42px; }
+  .game-title { font-size: 22px; font-weight: 700; }
+  .game-desc { font-size: 14px; color: #9aa0a6; line-height: 1.5; }
+  .game-arrow {
+    align-self: flex-end; font-size: 20px; color: #5f6368;
+    transition: all 0.2s;
+  }
+  .game-card:hover .game-arrow { color: #e8eaed; transform: translateX(4px); }
+
+  /* Card accent colors */
+  .game-card.dragon::before { background: linear-gradient(90deg, #f44336, #ff9800); }
+  .game-card.dragon:hover { border-color: rgba(255,152,0,0.25); }
+  .game-card.dice::before { background: linear-gradient(90deg, #ff9800, #8ab4f8); }
+  .game-card.dice:hover { border-color: rgba(138,180,248,0.25); }
+
+  .footer {
+    margin-top: 60px; font-size: 12px; color: #5f6368;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 32px 16px; justify-content: flex-start; padding-top: 60px; }
+    h1 { font-size: 28px; }
+    .subtitle { margin-bottom: 32px; }
+    .games { gap: 14px; }
+    .game-card { padding: 24px 20px; gap: 10px; }
+    .game-icon { font-size: 36px; }
+    .game-title { font-size: 19px; }
+    .game-desc { font-size: 13px; }
+    .footer { margin-top: 40px; }
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .game-card:hover { transform: none; box-shadow: none; border-color: rgba(255,255,255,0.06); }
+    .game-card:active { transform: scale(0.98); }
+    .game-card:hover .game-arrow { color: #5f6368; transform: none; }
+    .game-card:active .game-arrow { color: #e8eaed; }
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>射龍門</h1>
-    <button id="deal-btn">發牌</button>
-    <div id="cards">
-      <div id="card1"></div>
-      <div id="card2"></div>
-      <div id="card3"></div>
-    </div>
-    <div id="result"></div>
-  </div>
-  <script src="script.js"></script>
+
+<h1>Game Hub</h1>
+<p class="subtitle">選擇一個遊戲開始玩吧</p>
+
+<div class="games">
+
+  <a href="dragonGate/" class="game-card dragon">
+    <span class="game-icon">🃏</span>
+    <span class="game-title">射龍門</span>
+    <span class="game-desc">經典撲克牌遊戲，猜測第三張牌是否落在兩張牌之間。</span>
+    <span class="game-arrow">→</span>
+  </a>
+
+  <a href="dndDice/" class="game-card dice">
+    <span class="game-icon">🎲</span>
+    <span class="game-title">D&D 骰子擲骰器</span>
+    <span class="game-desc">支援混搭骰子、三種特效 Skin、擲骰歷史的 D&D 骰子工具。</span>
+    <span class="game-arrow">→</span>
+  </a>
+
+</div>
+
+<p class="footer">ddwolfer.github.io</p>
+
 </body>
 </html>
