@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D 骰子擲骰器</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ===== Theme variables ===== */
+  :root {
+    --bg: #202124;
+    --bg-image: none;
+    --card-bg: #303134;
+    --card-border: transparent;
+    --text: #e8eaed;
+    --text-dim: #9aa0a6;
+    --text-dimmer: #5f6368;
+    --accent: #ff9800;
+    --accent2: #8ab4f8;
+    --btn-bg: #8ab4f8;
+    --btn-text: #202124;
+    --btn-shadow: none;
+    --total-color: #ff9800;
+    --total-shadow: none;
+    --badge-bg: #ff9800;
+    --badge-text: #202124;
+    --badge-shadow: none;
+    --scrollbar: #5f6368;
+  }
+  body.skin-crystal {
+    --bg: #121218;
+    --bg-image: radial-gradient(ellipse at 50% 0%, rgba(100,60,180,0.15) 0%, transparent 60%);
+    --card-bg: rgba(30,30,42,0.8);
+    --card-border: rgba(255,255,255,0.08);
+    --text: #e8eaed;
+    --text-dim: #9999bb;
+    --text-dimmer: #555566;
+    --accent: #c9a0ff;
+    --accent2: #c9a0ff;
+    --btn-bg: linear-gradient(135deg, #c9a0ff, #8060cc);
+    --btn-text: #fff;
+    --btn-shadow: 0 4px 20px rgba(160,100,255,0.3);
+    --total-color: #c9a0ff;
+    --total-shadow: 0 0 20px rgba(180,120,255,0.5);
+    --badge-bg: linear-gradient(135deg, #c9a0ff, #8060cc);
+    --badge-text: #fff;
+    --badge-shadow: 0 2px 8px rgba(160,100,255,0.3);
+    --scrollbar: #3c3c4a;
+  }
+  body.skin-nebula {
+    --bg: #0a0005;
+    --bg-image: radial-gradient(ellipse at 50% 0%, rgba(180,40,0,0.12) 0%, rgba(80,10,0,0.08) 40%, transparent 70%),
+                radial-gradient(ellipse at 80% 80%, rgba(120,20,0,0.1) 0%, transparent 50%);
+    --card-bg: rgba(30,5,10,0.85);
+    --card-border: rgba(255,80,20,0.15);
+    --text: #e8ddd5;
+    --text-dim: #bb8866;
+    --text-dimmer: #664433;
+    --accent: #ff6b2b;
+    --accent2: #ff4500;
+    --btn-bg: linear-gradient(135deg, #ff6b2b, #cc2200);
+    --btn-text: #fff;
+    --btn-shadow: 0 4px 20px rgba(255,80,0,0.35);
+    --total-color: #ff6b2b;
+    --total-shadow: 0 0 12px rgba(255,100,0,0.5), 0 0 30px rgba(255,60,0,0.25);
+    --badge-bg: linear-gradient(135deg, #ff6b2b, #cc2200);
+    --badge-text: #fff;
+    --badge-shadow: 0 2px 10px rgba(255,80,0,0.4);
+    --scrollbar: #4a2010;
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    background-image: var(--bg-image);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px; transition: background 0.4s;
+  }
+
+  /* Header row */
+  .header-row {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 8px; width: 100%; max-width: 700px;
+    justify-content: center; position: relative;
+  }
+  h1 { font-size: 28px; color: var(--accent); transition: color 0.4s, text-shadow 0.4s; }
+  body.skin-crystal h1 { text-shadow: 0 0 20px rgba(180,120,255,0.4); }
+  body.skin-nebula h1 { text-shadow: 0 0 20px rgba(255,100,0,0.5), 0 0 40px rgba(255,60,0,0.25); }
+  .subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; }
+
+  /* Skin selector */
+  .skin-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+  }
+  .skin-toggle-label {
+    font-size: 11px; color: var(--text-dim); margin-bottom: 2px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .skin-options { display: flex; gap: 6px; }
+  .skin-opt {
+    width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; position: relative; overflow: hidden;
+  }
+  .skin-opt:hover { transform: scale(1.1); }
+  .skin-opt.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(255,255,255,0.15); }
+  .skin-opt[data-skin="classic"] {
+    background: linear-gradient(135deg, #ff9800, #f44336);
+  }
+  .skin-opt[data-skin="crystal"] {
+    background: linear-gradient(135deg, #8060cc, #c9a0ff);
+    position: relative;
+  }
+  .skin-opt[data-skin="crystal"]::after {
+    content: ''; position: absolute; top: 4px; left: 6px;
+    width: 12px; height: 8px; background: rgba(255,255,255,0.4);
+    border-radius: 50%; transform: rotate(-20deg);
+  }
+  .skin-opt[data-skin="nebula"] {
+    background: linear-gradient(135deg, #ff6b2b, #cc2200, #880000);
+    position: relative;
+  }
+  .skin-opt[data-skin="nebula"]::after {
+    content: ''; position: absolute; top: 6px; left: 8px;
+    width: 10px; height: 10px; background: rgba(255,200,0,0.5);
+    border-radius: 50%; filter: blur(2px);
+  }
+  .skin-opt-tip {
+    position: absolute; right: 46px; top: 50%; transform: translateY(-50%);
+    background: #333; color: #eee; padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .skin-opt:hover .skin-opt-tip { opacity: 1; }
+
+  /* Dice type selector */
+  .dice-selector {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 12px;
+  }
+  .dice-btn {
+    width: 52px; height: 52px; border: none; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 700; color: #fff;
+    transition: all 0.2s; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .dice-btn:hover { transform: scale(1.12); filter: brightness(1.15); }
+  body.skin-crystal .dice-btn:hover { filter: brightness(1.2) drop-shadow(0 0 8px currentColor); }
+  body.skin-nebula .dice-btn:hover { filter: brightness(1.2) drop-shadow(0 0 8px rgba(255,100,0,0.6)); }
+  .dice-btn[data-sides="4"]  { background: #34a853; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); width: 54px; height: 48px; padding-top: 10px; }
+  .dice-btn[data-sides="6"]  { background: #00bcd4; border-radius: 6px; }
+  .dice-btn[data-sides="8"]  { background: #9c27b0; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); width: 54px; height: 54px; }
+  .dice-btn[data-sides="10"] { background: #e91e63; clip-path: polygon(50% 0%, 95% 40%, 75% 100%, 25% 100%, 5% 40%); width: 54px; height: 54px; padding-top: 4px; }
+  .dice-btn[data-sides="12"] { background: #f44336; clip-path: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%); width: 56px; height: 56px; }
+  .dice-btn[data-sides="20"] { background: #ff9800; clip-path: polygon(50% 0%, 80% 10%, 100% 40%, 100% 65%, 80% 95%, 50% 100%, 20% 95%, 0% 65%, 0% 40%, 20% 10%); width: 56px; height: 56px; }
+  .dice-btn[data-sides="100"]{ background: #607d8b; border-radius: 50%; font-size: 12px; }
+  body.skin-crystal .dice-btn[data-sides="4"]  { background: linear-gradient(135deg, #5eff9e, #34a853); }
+  body.skin-crystal .dice-btn[data-sides="6"]  { background: linear-gradient(135deg, #6eeeff, #00bcd4); }
+  body.skin-crystal .dice-btn[data-sides="8"]  { background: linear-gradient(135deg, #d580ff, #9c27b0); }
+  body.skin-crystal .dice-btn[data-sides="10"] { background: linear-gradient(135deg, #ff6f9c, #e91e63); }
+  body.skin-crystal .dice-btn[data-sides="12"] { background: linear-gradient(135deg, #ff7777, #f44336); }
+  body.skin-crystal .dice-btn[data-sides="20"] { background: linear-gradient(135deg, #ffcc44, #ff9800); }
+  body.skin-crystal .dice-btn[data-sides="100"]{ background: linear-gradient(135deg, #aabbcc, #607d8b); }
+  body.skin-nebula .dice-btn[data-sides="4"]  { background: linear-gradient(135deg, #ff9944, #cc4400); }
+  body.skin-nebula .dice-btn[data-sides="6"]  { background: linear-gradient(135deg, #ffaa33, #bb3300); }
+  body.skin-nebula .dice-btn[data-sides="8"]  { background: linear-gradient(135deg, #ff7733, #aa2200); }
+  body.skin-nebula .dice-btn[data-sides="10"] { background: linear-gradient(135deg, #ff5533, #991100); }
+  body.skin-nebula .dice-btn[data-sides="12"] { background: linear-gradient(135deg, #ff4422, #880000); }
+  body.skin-nebula .dice-btn[data-sides="20"] { background: linear-gradient(135deg, #ffcc00, #ff6600); }
+  body.skin-nebula .dice-btn[data-sides="100"]{ background: linear-gradient(135deg, #ff8844, #993300); }
+
+  .mod-btn {
+    width: 52px; height: 52px; border: 1px solid var(--text-dimmer); border-radius: 50%;
+    cursor: pointer; font-size: 20px; font-weight: 700; color: #fff;
+    background: var(--card-bg); display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .mod-btn:hover { transform: scale(1.12); filter: brightness(1.2); }
+
+  /* Tray */
+  .tray-area {
+    width: 100%; max-width: 700px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; min-height: 80px;
+    transition: background 0.4s;
+  }
+  .tray-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .tray-label { font-size: 16px; color: var(--text-dim); }
+  .tray-notation { font-size: 14px; color: var(--accent2); font-weight: 600; }
+  .tray-dice { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 50px; }
+  .tray-dice.empty { color: var(--text-dimmer); font-size: 14px; }
+  .tray-die {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s; animation: trayPop 0.25s ease-out;
+  }
+  .tray-die:hover { transform: scale(1.1); }
+  .tray-die:hover::after {
+    content: '✕'; position: absolute; top: -4px; right: -4px;
+    background: #f44336; color: #fff; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @keyframes trayPop { 0%{transform:scale(0);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1} }
+  .tray-die .tray-die-label {
+    position: absolute; font-size: 13px; font-weight: 700; color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7); pointer-events: none;
+  }
+  .tray-mod {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 6px 12px; font-size: 16px; font-weight: 700;
+    color: var(--accent2); cursor: pointer; transition: all 0.15s; animation: trayPop 0.25s ease-out;
+  }
+  .tray-mod:hover { filter: brightness(1.2); }
+  .tray-mod input {
+    width: 45px; background: transparent; border: none;
+    color: var(--accent2); font-size: 16px; font-weight: 700; text-align: center; outline: none;
+  }
+  .tray-mod input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Action buttons */
+  .actions { display: flex; gap: 14px; margin-bottom: 24px; }
+  .roll-btn, .clear-btn {
+    padding: 12px 32px; border: none; border-radius: 24px;
+    font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .roll-btn { background: var(--btn-bg); color: var(--btn-text); box-shadow: var(--btn-shadow); }
+  .roll-btn:hover { transform: scale(1.04); filter: brightness(1.1); }
+  .roll-btn:active { transform: scale(0.97); }
+  .roll-btn:disabled { background: var(--text-dimmer) !important; box-shadow: none !important; cursor: not-allowed; transform: none; filter: none; }
+  .clear-btn { background: var(--card-bg); color: var(--text); border: 1px solid var(--card-border); }
+  .clear-btn:hover { filter: brightness(1.2); }
+
+  /* Results */
+  .results-area {
+    width: 100%; max-width: 700px; min-height: 120px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 24px; display: none; transition: background 0.4s;
+  }
+  .results-area.show { display: block; }
+  .results-label { font-size: 18px; color: var(--text-dim); margin-bottom: 16px; }
+  .dice-results {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    justify-content: center; min-height: 80px; align-items: center;
+  }
+  .die-result {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    animation: dieAppearBounce 0.5s ease-out;
+    filter: drop-shadow(0 4px 12px var(--die-glow, rgba(255,255,255,0.1)));
+  }
+  @keyframes dieAppearBounce {
+    0%{transform:scale(0) rotate(-220deg);opacity:0;filter:brightness(2)}
+    40%{transform:scale(1.25) rotate(15deg);filter:brightness(1.5)}
+    70%{transform:scale(0.95) rotate(-5deg)}
+    100%{transform:scale(1) rotate(0deg);opacity:1;filter:brightness(1)}
+  }
+  .die-result .die-value {
+    position: absolute; font-size: 26px; font-weight: 700; color: #fff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.5); pointer-events: none;
+  }
+  body.skin-crystal .die-result .die-value {
+    text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 2px 4px rgba(0,0,0,0.5);
+  }
+  body.skin-nebula .die-result .die-value {
+    text-shadow: 0 0 10px rgba(255,200,100,0.8), 0 0 20px rgba(255,100,0,0.4), 0 2px 4px rgba(0,0,0,0.7);
+  }
+  .die-result.crit .die-value {
+    color: #ffd700; font-size: 30px;
+    animation: critPulse 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes critPulse {
+    0%{text-shadow:0 0 10px rgba(255,215,0,0.6),0 0 20px rgba(255,215,0,0.3)}
+    100%{text-shadow:0 0 20px rgba(255,215,0,1),0 0 40px rgba(255,215,0,0.6),0 0 60px rgba(255,215,0,0.3)}
+  }
+  .die-result.fail .die-value { color: #ff5252; text-shadow: 0 0 10px rgba(255,50,50,0.6); }
+
+  /* Nebula die-result glow pulse */
+  body.skin-nebula .die-result {
+    animation: dieAppearBounce 0.5s ease-out, nebulaGlow 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255,100,0,0.4)) drop-shadow(0 0 16px rgba(255,50,0,0.2));
+  }
+  @keyframes nebulaGlow {
+    0%   { filter: drop-shadow(0 0 8px rgba(255,100,0,0.4)) drop-shadow(0 0 16px rgba(255,50,0,0.2)); }
+    50%  { filter: drop-shadow(0 0 14px rgba(255,120,0,0.6)) drop-shadow(0 0 28px rgba(255,60,0,0.35)); }
+    100% { filter: drop-shadow(0 0 8px rgba(255,100,0,0.4)) drop-shadow(0 0 16px rgba(255,50,0,0.2)); }
+  }
+  body.skin-nebula .die-result.crit {
+    animation: dieAppearBounce 0.5s ease-out, nebulaCritGlow 1.2s ease-in-out infinite;
+  }
+  @keyframes nebulaCritGlow {
+    0%   { filter: drop-shadow(0 0 12px rgba(255,200,0,0.6)) drop-shadow(0 0 24px rgba(255,150,0,0.3)) drop-shadow(0 0 40px rgba(255,80,0,0.2)); }
+    50%  { filter: drop-shadow(0 0 20px rgba(255,220,0,0.9)) drop-shadow(0 0 40px rgba(255,160,0,0.5)) drop-shadow(0 0 60px rgba(255,100,0,0.35)); }
+    100% { filter: drop-shadow(0 0 12px rgba(255,200,0,0.6)) drop-shadow(0 0 24px rgba(255,150,0,0.3)) drop-shadow(0 0 40px rgba(255,80,0,0.2)); }
+  }
+  body.skin-nebula .die-result.crit .die-value {
+    color: #ffe066;
+    animation: critPulse 0.6s ease-in-out infinite alternate;
+  }
+
+  /* Sparkles (crystal skin only, added via JS) */
+  .sparkle-container { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .sparkle {
+    position: absolute; width:4px; height:4px; background:#fff; border-radius:50%;
+    animation: sparkleAnim var(--dur) ease-in-out infinite; animation-delay: var(--delay); opacity:0;
+  }
+  @keyframes sparkleAnim { 0%,100%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1)} }
+
+  /* Nebula ember particles */
+  .ember-container { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .ember {
+    position: absolute; border-radius: 50%;
+    animation: emberFloat var(--dur) ease-out infinite; animation-delay: var(--delay); opacity: 0;
+  }
+  @keyframes emberFloat {
+    0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+    15%  { opacity: 1; }
+    70%  { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(calc(-40px - var(--drift))) scale(0) translateX(var(--sway)); }
+  }
+
+  .group-label {
+    width: 100%; text-align: center; font-size: 13px; color: var(--text-dim);
+    margin-top: 4px; margin-bottom: 8px; padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .total-section {
+    display: flex; justify-content: flex-end; align-items: center; gap: 12px;
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .total-label { font-size: 16px; color: var(--text-dim); }
+  .total-value { font-size: 36px; font-weight: 700; color: var(--total-color); text-shadow: var(--total-shadow); transition: color 0.4s; }
+  .modifier-display { font-size: 14px; color: var(--text-dim); margin-top: 4px; text-align: right; }
+
+  /* History */
+  .history { width: 100%; max-width: 700px; margin-top: 24px; }
+  .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .history-header h3 { font-size: 16px; color: var(--text-dim); }
+  .history-clear-btn {
+    background: none; border: 1px solid var(--card-border); color: var(--text-dim); border-radius: 14px;
+    padding: 4px 12px; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .history-clear-btn:hover { filter: brightness(1.3); }
+  .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+  .history-list::-webkit-scrollbar { width: 6px; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+  .history-item {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    padding: 12px 16px; border-radius: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .history-item:hover { filter: brightness(1.15); }
+  body.skin-nebula .history-item:hover {
+    border-color: rgba(255,100,20,0.3);
+    box-shadow: 0 0 12px rgba(255,80,0,0.15);
+  }
+  .history-item-top { display: flex; justify-content: space-between; align-items: center; }
+  .h-notation { color: var(--accent2); font-size: 14px; font-weight: 600; }
+  .h-total-badge {
+    background: var(--badge-bg); color: var(--badge-text); font-weight: 700; font-size: 16px;
+    padding: 2px 12px; border-radius: 12px; min-width: 40px; text-align: center;
+    box-shadow: var(--badge-shadow);
+  }
+  .h-dice-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .h-die { position: relative; display: flex; align-items: center; justify-content: center; }
+  .h-die-val {
+    position: absolute; font-size: 12px; font-weight: 700; color: #fff;
+    text-shadow: 0 0 6px rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.6); pointer-events: none;
+  }
+  .h-die.crit .h-die-val { color: #ffd700; }
+  .h-die.fail .h-die-val { color: #ff5252; }
+  .h-mod-badge { font-size: 13px; font-weight: 600; color: var(--accent2); background: var(--card-bg); border-radius: 6px; padding: 2px 8px; }
+  .h-plus { font-size: 14px; color: var(--text-dimmer); font-weight: 700; }
+
+  /* Quick rolls */
+  .quick-rolls {
+    width: 100%; max-width: 700px; margin-top: 24px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 16px; transition: background 0.4s;
+  }
+  .quick-rolls h3 { font-size: 15px; color: var(--text-dim); margin-bottom: 10px; }
+  .quick-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .quick-btn {
+    padding: 8px 16px; border: 1px solid var(--card-border); border-radius: 20px;
+    background: transparent; color: var(--accent2); font-size: 14px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .quick-btn:hover { background: rgba(255,255,255,0.08); }
+  body.skin-nebula .quick-btn:hover {
+    background: rgba(255,80,0,0.12);
+    border-color: rgba(255,80,20,0.3);
+    box-shadow: 0 0 8px rgba(255,80,0,0.15);
+  }
+
+  .hint { margin-top: 20px; font-size: 12px; color: var(--text-dimmer); text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- Skin selector -->
+<div class="skin-toggle">
+  <div class="skin-toggle-label">SKIN</div>
+  <div class="skin-options">
+    <div class="skin-opt active" data-skin="classic" onclick="setSkin('classic')">
+      <span style="font-size:16px">🎲</span>
+      <span class="skin-opt-tip">經典</span>
+    </div>
+    <div class="skin-opt" data-skin="crystal" onclick="setSkin('crystal')">
+      <span style="font-size:16px">💎</span>
+      <span class="skin-opt-tip">水晶</span>
+    </div>
+    <div class="skin-opt" data-skin="nebula" onclick="setSkin('nebula')">
+      <span style="font-size:16px">🔥</span>
+      <span class="skin-opt-tip">星雲烈焰</span>
+    </div>
+  </div>
+</div>
+
+<div class="header-row"><h1>D&D 骰子擲骰器</h1></div>
+<p class="subtitle">點擊骰子加入托盤，可混搭不同骰子，然後一起擲！</p>
+
+<div class="dice-selector">
+  <button class="dice-btn" data-sides="4" title="加入 d4">d4</button>
+  <button class="dice-btn" data-sides="6" title="加入 d6">d6</button>
+  <button class="dice-btn" data-sides="8" title="加入 d8">d8</button>
+  <button class="dice-btn" data-sides="10" title="加入 d10">d10</button>
+  <button class="dice-btn" data-sides="12" title="加入 d12">d12</button>
+  <button class="dice-btn" data-sides="20" title="加入 d20">d20</button>
+  <button class="dice-btn" data-sides="100" title="加入 d100">d100</button>
+  <button class="mod-btn" id="addModBtn" title="加入修正值">±</button>
+</div>
+
+<div class="tray-area">
+  <div class="tray-header">
+    <span class="tray-label">擲骰托盤</span>
+    <span class="tray-notation" id="trayNotation"></span>
+  </div>
+  <div class="tray-dice empty" id="trayDice">點擊上方骰子加入托盤</div>
+</div>
+
+<div class="actions">
+  <button class="roll-btn" id="rollBtn" onclick="rollDice()" disabled>擲出骰子</button>
+  <button class="clear-btn" onclick="clearTray()">清除</button>
+</div>
+
+<div class="results-area" id="resultsArea">
+  <div class="results-label" id="resultsLabel">擲骰結果</div>
+  <div class="dice-results" id="diceResults"></div>
+  <div class="total-section">
+    <div>
+      <div class="modifier-display" id="modifierDisplay"></div>
+      <div style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
+        <span class="total-label">總計</span>
+        <span class="total-value" id="totalValue">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="quick-rolls">
+  <h3>快速擲骰</h3>
+  <div class="quick-btns">
+    <button class="quick-btn" onclick="quickRoll([20])">1d20</button>
+    <button class="quick-btn" onclick="quickRoll([20,20])">2d20</button>
+    <button class="quick-btn" onclick="quickRoll([20],5)">1d20+5</button>
+    <button class="quick-btn" onclick="quickRoll([6,6,6,6])">4d6</button>
+    <button class="quick-btn" onclick="quickRoll([6,6])">2d6</button>
+    <button class="quick-btn" onclick="quickRoll([12])">1d12</button>
+    <button class="quick-btn" onclick="quickRoll([10])">1d10</button>
+    <button class="quick-btn" onclick="quickRoll([8])">1d8</button>
+    <button class="quick-btn" onclick="quickRoll([8,8],3)">2d8+3</button>
+    <button class="quick-btn" onclick="quickRoll([6,6,6,6,6,6,6,6])">8d6 (火球)</button>
+    <button class="quick-btn" onclick="quickRoll([6,6],4)">2d6+4 (巨劍)</button>
+    <button class="quick-btn" onclick="quickRoll([20,8],5)">1d20+1d8+5</button>
+    <button class="quick-btn" onclick="quickRoll([100])">1d100</button>
+  </div>
+</div>
+
+<div class="history" id="historySection" style="display:none;">
+  <div class="history-header">
+    <h3>擲骰歷史</h3>
+    <button class="history-clear-btn" onclick="clearHistory()">清除歷史</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<div class="hint">按 Space 或 Enter 快速擲骰 ｜ 按 Esc 清除托盤</div>
+
+<!-- Shared SVG defs for crystal skin -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="cg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a0ffc8" stop-opacity="0.9"/><stop offset="40%" stop-color="#34a853" stop-opacity="0.75"/><stop offset="100%" stop-color="#1a6e30" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a0f0ff" stop-opacity="0.9"/><stop offset="40%" stop-color="#00bcd4" stop-opacity="0.75"/><stop offset="100%" stop-color="#006978" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8b0ff" stop-opacity="0.9"/><stop offset="40%" stop-color="#9c27b0" stop-opacity="0.75"/><stop offset="100%" stop-color="#5c1070" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg10" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffa0c0" stop-opacity="0.9"/><stop offset="40%" stop-color="#e91e63" stop-opacity="0.75"/><stop offset="100%" stop-color="#880038" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg12" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffa0a0" stop-opacity="0.9"/><stop offset="40%" stop-color="#f44336" stop-opacity="0.75"/><stop offset="100%" stop-color="#8e1a10" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg20" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe090" stop-opacity="0.9"/><stop offset="40%" stop-color="#ff9800" stop-opacity="0.75"/><stop offset="100%" stop-color="#a05800" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg100" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c0d0e0" stop-opacity="0.9"/><stop offset="40%" stop-color="#607d8b" stop-opacity="0.75"/><stop offset="100%" stop-color="#36474f" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="60%" y2="60%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.5"/><stop offset="40%" stop-color="#fff" stop-opacity="0.1"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="innerGlow" cx="35%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.3"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<script>
+let tray = [], trayModifier = 0, hasModifier = false, rollHistory = [];
+let currentSkin = 'classic';
+let nid = 0; // unique ID counter for nebula gradients
+
+const diceColors = { 4:'#34a853', 6:'#00bcd4', 8:'#9c27b0', 10:'#e91e63', 12:'#f44336', 20:'#ff9800', 100:'#607d8b' };
+const diceGlows = { 4:'rgba(52,168,83,0.5)', 6:'rgba(0,188,212,0.5)', 8:'rgba(156,39,176,0.5)', 10:'rgba(233,30,99,0.5)', 12:'rgba(244,67,54,0.5)', 20:'rgba(255,152,0,0.5)', 100:'rgba(96,125,139,0.5)' };
+
+// Nebula color palettes per die type (outer1, outer2, core, edge-glow)
+const nebulaColors = {
+  4:  { c1:'#ff9900', c2:'#cc3300', c3:'#ffdd00', core:'#330500', edge:'#ffaa33' },
+  6:  { c1:'#ff6600', c2:'#aa1100', c3:'#ffcc00', core:'#2a0200', edge:'#ff8844' },
+  8:  { c1:'#ff4400', c2:'#990000', c3:'#ff8800', core:'#200000', edge:'#ff6622' },
+  10: { c1:'#ff3300', c2:'#880000', c3:'#ff6600', core:'#1a0000', edge:'#ff5533' },
+  12: { c1:'#ff2200', c2:'#770000', c3:'#ff5500', core:'#150000', edge:'#ff4422' },
+  20: { c1:'#ffaa00', c2:'#dd4400', c3:'#ffee44', core:'#2d0800', edge:'#ffcc33' },
+  100:{ c1:'#ff7733', c2:'#993300', c3:'#ffaa44', core:'#1f0500', edge:'#ff9955' }
+};
+
+function shadeColor(c, p) {
+  let n=parseInt(c.replace("#",""),16), a=Math.round(2.55*p);
+  let R=Math.min(255,Math.max(0,(n>>16)+a)), G=Math.min(255,Math.max(0,(n>>8&0xFF)+a)), B=Math.min(255,Math.max(0,(n&0xFF)+a));
+  return "#"+(0x1000000+R*0x10000+G*0x100+B).toString(16).slice(1);
+}
+
+/* ===== SKIN: Classic dice ===== */
+function getClassicSVG(sides, color, size) {
+  const vb=`viewBox="0 0 100 100"`, s=`style="width:${size}px;height:${size}px"`, sc=shadeColor;
+  switch(sides) {
+    case 4: return `<svg ${vb} ${s}><polygon points="50,8 8,92 92,92" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/><polygon points="50,8 8,92 50,65" fill="${sc(color,10)}" opacity="0.3"/><polygon points="50,8 92,92 50,65" fill="${sc(color,-10)}" opacity="0.2"/></svg>`;
+    case 6: return `<svg ${vb} ${s}><rect x="10" y="10" width="80" height="80" rx="8" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/><rect x="10" y="10" width="80" height="40" rx="8" fill="${sc(color,15)}" opacity="0.3"/></svg>`;
+    case 8: return `<svg ${vb} ${s}><polygon points="50,5 95,50 50,95 5,50" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/><polygon points="50,5 95,50 50,50" fill="${sc(color,10)}" opacity="0.3"/><polygon points="50,5 5,50 50,50" fill="${sc(color,15)}" opacity="0.2"/></svg>`;
+    case 10: return `<svg ${vb} ${s}><polygon points="50,5 90,35 78,90 22,90 10,35" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/><polygon points="50,5 90,35 50,50 10,35" fill="${sc(color,15)}" opacity="0.3"/></svg>`;
+    case 12: return `<svg ${vb} ${s}><polygon points="50,5 82,15 97,45 87,78 60,97 40,97 13,78 3,45 18,15" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/><polygon points="50,5 82,15 97,45 50,50 3,45 18,15" fill="${sc(color,15)}" opacity="0.25"/></svg>`;
+    case 20: return `<svg ${vb} ${s}><polygon points="50,3 82,18 95,50 82,82 50,97 18,82 5,50 18,18" fill="${color}" stroke="${sc(color,-25)}" stroke-width="2"/><polygon points="50,3 82,18 95,50 50,55 5,50 18,18" fill="${sc(color,15)}" opacity="0.3"/><polygon points="50,3 82,18 50,35 18,18" fill="${sc(color,20)}" opacity="0.15"/><polygon points="82,82 50,97 18,82 50,55" fill="${sc(color,-10)}" opacity="0.2"/></svg>`;
+    case 100: return `<svg ${vb} ${s}><circle cx="50" cy="50" r="44" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/><ellipse cx="50" cy="38" rx="38" ry="28" fill="${sc(color,15)}" opacity="0.25"/></svg>`;
+    default: return `<svg ${vb} ${s}><rect x="10" y="10" width="80" height="80" rx="8" fill="${color}" stroke="${sc(color,-20)}" stroke-width="2"/></svg>`;
+  }
+}
+
+/* ===== SKIN: Crystal dice ===== */
+function getCrystalSVG(sides, color, size) {
+  const s=size, g=`cg${sides}`, ec=shadeColor(color,40)+'aa', dk=shadeColor(color,-30)+'66';
+  switch(sides) {
+    case 4: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><polygon points="50,8 8,92 92,92" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><polygon points="50,8 8,92 50,60" fill="url(#shine)" opacity="0.6"/><polygon points="50,8 92,92 50,60" fill="${dk}"/><line x1="50" y1="8" x2="50" y2="60" stroke="#fff" stroke-width="0.5" opacity="0.4"/><polygon points="50,8 8,92 92,92" fill="url(#innerGlow)"/><ellipse cx="38" cy="40" rx="10" ry="6" fill="#fff" opacity="0.15" transform="rotate(-30 38 40)"/></svg>`;
+    case 6: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><rect x="10" y="10" width="80" height="80" rx="8" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><rect x="10" y="10" width="80" height="40" rx="8" fill="url(#shine)" opacity="0.5"/><rect x="10" y="10" width="80" height="80" rx="8" fill="url(#innerGlow)"/><ellipse cx="35" cy="32" rx="16" ry="10" fill="#fff" opacity="0.12" transform="rotate(-15 35 32)"/><rect x="12" y="12" width="30" height="20" rx="6" fill="#fff" opacity="0.08"/></svg>`;
+    case 8: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><polygon points="50,5 95,50 50,95 5,50" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><polygon points="50,5 95,50 50,50" fill="url(#shine)" opacity="0.5"/><polygon points="5,50 50,95 50,50" fill="${dk}"/><line x1="50" y1="5" x2="50" y2="95" stroke="#fff" stroke-width="0.5" opacity="0.2"/><line x1="5" y1="50" x2="95" y2="50" stroke="#fff" stroke-width="0.5" opacity="0.15"/><polygon points="50,5 95,50 50,95 5,50" fill="url(#innerGlow)"/><ellipse cx="42" cy="35" rx="12" ry="8" fill="#fff" opacity="0.12" transform="rotate(-20 42 35)"/></svg>`;
+    case 10: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><polygon points="50,5 90,35 78,90 22,90 10,35" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><polygon points="50,5 90,35 50,45 10,35" fill="url(#shine)" opacity="0.5"/><polygon points="90,35 78,90 50,45" fill="${dk}"/><line x1="50" y1="5" x2="50" y2="45" stroke="#fff" stroke-width="0.5" opacity="0.3"/><polygon points="50,5 90,35 78,90 22,90 10,35" fill="url(#innerGlow)"/><ellipse cx="40" cy="30" rx="12" ry="7" fill="#fff" opacity="0.12" transform="rotate(-25 40 30)"/></svg>`;
+    case 12: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><polygon points="50,5 82,15 97,45 87,78 60,97 40,97 13,78 3,45 18,15" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><polygon points="50,5 82,15 97,45 50,50 3,45 18,15" fill="url(#shine)" opacity="0.45"/><polygon points="97,45 87,78 50,50" fill="${dk}"/><polygon points="13,78 40,97 60,97 87,78 50,50" fill="${dk}" opacity="0.5"/><polygon points="50,5 82,15 97,45 87,78 60,97 40,97 13,78 3,45 18,15" fill="url(#innerGlow)"/><ellipse cx="40" cy="28" rx="14" ry="8" fill="#fff" opacity="0.1" transform="rotate(-15 40 28)"/></svg>`;
+    case 20: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><polygon points="50,3 82,18 95,50 82,82 50,97 18,82 5,50 18,18" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><polygon points="50,3 82,18 95,50 50,50 5,50 18,18" fill="url(#shine)" opacity="0.45"/><polygon points="50,3 82,18 50,35 18,18" fill="#fff" opacity="0.15"/><polygon points="82,18 95,50 50,50 50,35" fill="#fff" opacity="0.06"/><polygon points="5,50 18,82 50,50" fill="${dk}" opacity="0.4"/><polygon points="18,82 50,97 82,82 50,50" fill="${dk}" opacity="0.6"/><polygon points="95,50 82,82 50,50" fill="${dk}" opacity="0.3"/><line x1="50" y1="3" x2="50" y2="50" stroke="#fff" stroke-width="0.5" opacity="0.25"/><line x1="18" y1="18" x2="50" y2="50" stroke="#fff" stroke-width="0.3" opacity="0.15"/><line x1="82" y1="18" x2="50" y2="50" stroke="#fff" stroke-width="0.3" opacity="0.15"/><polygon points="50,3 82,18 95,50 82,82 50,97 18,82 5,50 18,18" fill="url(#innerGlow)"/><ellipse cx="38" cy="26" rx="14" ry="9" fill="#fff" opacity="0.12" transform="rotate(-20 38 26)"/><ellipse cx="30" cy="22" rx="5" ry="3" fill="#fff" opacity="0.2" transform="rotate(-30 30 22)"/></svg>`;
+    case 100: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><circle cx="50" cy="50" r="44" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><ellipse cx="42" cy="38" rx="30" ry="22" fill="url(#shine)" opacity="0.4"/><circle cx="50" cy="50" r="44" fill="url(#innerGlow)"/><ellipse cx="36" cy="32" rx="12" ry="7" fill="#fff" opacity="0.15" transform="rotate(-20 36 32)"/><ellipse cx="32" cy="28" rx="4" ry="2.5" fill="#fff" opacity="0.25" transform="rotate(-30 32 28)"/></svg>`;
+    default: return `<svg viewBox="0 0 100 100" style="width:${s}px;height:${s}px"><rect x="10" y="10" width="80" height="80" rx="8" fill="url(#${g})" stroke="${ec}" stroke-width="1.5"/><rect x="10" y="10" width="80" height="80" rx="8" fill="url(#innerGlow)"/></svg>`;
+  }
+}
+
+/* ===== SKIN: Nebula dice ===== */
+function getNebulaSVG(sides, color, size) {
+  const id = nid++;
+  const nc = nebulaColors[sides] || nebulaColors[100];
+  const gid = `ng${id}`;
+  const fid = `nf${id}`;
+  const rgid = `nrg${id}`;
+
+  // Animated gradient defs
+  const gradDefs = `
+    <defs>
+      <radialGradient id="${rgid}" cx="40%" cy="40%" r="60%">
+        <stop offset="0%" stop-color="${nc.c3}" stop-opacity="0.95">
+          <animate attributeName="stop-color" values="${nc.c3};${nc.c1};${nc.c3}" dur="3s" repeatCount="indefinite"/>
+        </stop>
+        <stop offset="35%" stop-color="${nc.c1}" stop-opacity="0.85">
+          <animate attributeName="stop-color" values="${nc.c1};${nc.c2};${nc.c1}" dur="4s" repeatCount="indefinite"/>
+        </stop>
+        <stop offset="70%" stop-color="${nc.c2}" stop-opacity="0.9">
+          <animate attributeName="stop-color" values="${nc.c2};${nc.core};${nc.c2}" dur="3.5s" repeatCount="indefinite"/>
+        </stop>
+        <stop offset="100%" stop-color="${nc.core}" stop-opacity="1">
+          <animate attributeName="stop-opacity" values="1;0.85;1" dur="2.5s" repeatCount="indefinite"/>
+        </stop>
+      </radialGradient>
+      <linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${nc.c3}" stop-opacity="0.9">
+          <animate attributeName="stop-color" values="${nc.c3};${nc.c1};${nc.c3}" dur="2.8s" repeatCount="indefinite"/>
+        </stop>
+        <stop offset="50%" stop-color="${nc.c1}" stop-opacity="0.8">
+          <animate attributeName="stop-color" values="${nc.c1};${nc.c2};${nc.c1}" dur="3.2s" repeatCount="indefinite"/>
+        </stop>
+        <stop offset="100%" stop-color="${nc.core}" stop-opacity="0.95"/>
+      </linearGradient>
+      <filter id="${fid}" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="${Math.floor(Math.random()*100)}">
+          <animate attributeName="baseFrequency" values="0.03;0.06;0.03" dur="5s" repeatCount="indefinite"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="6"/>
+      </filter>
+    </defs>`;
+
+  const edgeStroke = nc.edge;
+  const sz = `style="width:${size}px;height:${size}px"`;
+  const vb = `viewBox="0 0 100 100"`;
+
+  // Inner dark core overlay
+  const coreOverlay = (shape) => {
+    switch(shape) {
+      case 'tri': return `<polygon points="50,30 30,75 70,75" fill="${nc.core}" opacity="0.4"/>`;
+      case 'rect': return `<rect x="25" y="25" width="50" height="50" rx="4" fill="${nc.core}" opacity="0.35"/>`;
+      case 'dia': return `<polygon points="50,20 80,50 50,80 20,50" fill="${nc.core}" opacity="0.35"/>`;
+      case 'pent': return `<polygon points="50,20 75,40 65,70 35,70 25,40" fill="${nc.core}" opacity="0.35"/>`;
+      case 'oct': return `<polygon points="50,18 72,25 85,48 78,72 55,85 45,85 22,72 15,48 28,25" fill="${nc.core}" opacity="0.3"/>`;
+      case 'circle': return `<circle cx="50" cy="50" r="28" fill="${nc.core}" opacity="0.35"/>`;
+      default: return `<polygon points="50,15 70,25 82,48 70,75 50,85 30,75 18,48 30,25" fill="${nc.core}" opacity="0.3"/>`;
+    }
+  };
+
+  switch(sides) {
+    case 4: return `<svg ${vb} ${sz}>${gradDefs}<polygon points="50,8 8,92 92,92" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><polygon points="50,8 8,92 92,92" fill="url(#${gid})" opacity="0.4"/>${coreOverlay('tri')}<polygon points="50,8 8,92 50,65" fill="${nc.c3}" opacity="0.15"/></svg>`;
+    case 6: return `<svg ${vb} ${sz}>${gradDefs}<rect x="10" y="10" width="80" height="80" rx="8" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><rect x="10" y="10" width="80" height="80" rx="8" fill="url(#${gid})" opacity="0.35"/>${coreOverlay('rect')}</svg>`;
+    case 8: return `<svg ${vb} ${sz}>${gradDefs}<polygon points="50,5 95,50 50,95 5,50" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><polygon points="50,5 95,50 50,95 5,50" fill="url(#${gid})" opacity="0.35"/>${coreOverlay('dia')}<polygon points="50,5 95,50 50,50" fill="${nc.c3}" opacity="0.1"/></svg>`;
+    case 10: return `<svg ${vb} ${sz}>${gradDefs}<polygon points="50,5 90,35 78,90 22,90 10,35" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><polygon points="50,5 90,35 78,90 22,90 10,35" fill="url(#${gid})" opacity="0.35"/>${coreOverlay('pent')}</svg>`;
+    case 12: return `<svg ${vb} ${sz}>${gradDefs}<polygon points="50,5 82,15 97,45 87,78 60,97 40,97 13,78 3,45 18,15" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><polygon points="50,5 82,15 97,45 87,78 60,97 40,97 13,78 3,45 18,15" fill="url(#${gid})" opacity="0.3"/>${coreOverlay('oct')}</svg>`;
+    case 20: return `<svg ${vb} ${sz}>${gradDefs}<polygon points="50,3 82,18 95,50 82,82 50,97 18,82 5,50 18,18" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><polygon points="50,3 82,18 95,50 82,82 50,97 18,82 5,50 18,18" fill="url(#${gid})" opacity="0.3"/>${coreOverlay('default')}<polygon points="50,3 82,18 50,35 18,18" fill="${nc.c3}" opacity="0.12"/><polygon points="82,82 50,97 18,82 50,55" fill="${nc.core}" opacity="0.25"/></svg>`;
+    case 100: return `<svg ${vb} ${sz}>${gradDefs}<circle cx="50" cy="50" r="44" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/><circle cx="50" cy="50" r="44" fill="url(#${gid})" opacity="0.35"/>${coreOverlay('circle')}</svg>`;
+    default: return `<svg ${vb} ${sz}>${gradDefs}<rect x="10" y="10" width="80" height="80" rx="8" fill="url(#${rgid})" stroke="${edgeStroke}" stroke-width="2.5" filter="url(#${fid})"/></svg>`;
+  }
+}
+
+function getDieSVG(sides, color, size) {
+  if (currentSkin === 'crystal') return getCrystalSVG(sides, color, size);
+  if (currentSkin === 'nebula') return getNebulaSVG(sides, color, size);
+  return getClassicSVG(sides, color, size);
+}
+
+function makeSparkles(sides) {
+  if (currentSkin === 'crystal') return makeCrystalSparkles(sides);
+  if (currentSkin === 'nebula') return makeNebulaSparks(sides);
+  return '';
+}
+
+function makeCrystalSparkles(sides) {
+  const lc = shadeColor(diceColors[sides]||'#607d8b', 50);
+  let h='<div class="sparkle-container">';
+  for(let i=0;i<6+Math.floor(Math.random()*4);i++){
+    const x=15+Math.random()*70, y=15+Math.random()*70, dur=1.5+Math.random()*2, del=Math.random()*3, sz=2+Math.random()*3;
+    h+=`<div class="sparkle" style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;--dur:${dur}s;--delay:${del}s;background:${lc};box-shadow:0 0 ${sz*2}px ${lc}"></div>`;
+  }
+  return h+'</div>';
+}
+
+function makeNebulaSparks(sides) {
+  const emberColors = ['#ff6600','#ff4400','#ffaa00','#ff8800','#ffcc33','#ff3300','#ffdd44','#ee5500'];
+  const count = 8 + Math.floor(Math.random()*5); // 8-12 particles
+  let h='<div class="ember-container">';
+  for(let i=0;i<count;i++){
+    const x = 10+Math.random()*80;
+    const y = 30+Math.random()*60;
+    const dur = 2+Math.random()*2.5;
+    const del = Math.random()*4;
+    const sz = 2+Math.random()*3;
+    const drift = 20+Math.random()*30;
+    const sway = -15+Math.random()*30;
+    const col = emberColors[Math.floor(Math.random()*emberColors.length)];
+    h+=`<div class="ember" style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;--dur:${dur}s;--delay:${del}s;--drift:${drift}px;--sway:${sway}px;background:${col};box-shadow:0 0 ${sz*3}px ${col}, 0 0 ${sz*6}px ${col}88"></div>`;
+  }
+  return h+'</div>';
+}
+
+/* ===== SKIN SWITCHING ===== */
+function setSkin(skin) {
+  currentSkin = skin;
+  if (skin === 'crystal') document.body.className = 'skin-crystal';
+  else if (skin === 'nebula') document.body.className = 'skin-nebula';
+  else document.body.className = '';
+  document.querySelectorAll('.skin-opt').forEach(o => o.classList.toggle('active', o.dataset.skin === skin));
+  // Re-render tray and results if visible
+  renderTray();
+  if (document.getElementById('resultsArea').classList.contains('show') && rollHistory.length > 0) {
+    reRenderLastResult();
+  }
+  renderHistory();
+}
+
+function reRenderLastResult() {
+  if (rollHistory.length === 0) return;
+  const h = rollHistory[0];
+  const resultsEl = document.getElementById('diceResults');
+  resultsEl.innerHTML = '';
+  const order = [4,6,8,10,12,20,100];
+  const groups = {};
+  h.diceData.forEach((d,i) => { if(!groups[d.sides]) groups[d.sides]=[]; groups[d.sides].push(d); });
+  const multiGroup = Object.keys(groups).length > 1;
+  let delayIdx = 0;
+  order.forEach(sides => {
+    if(!groups[sides]) return;
+    if(multiGroup) {
+      const label = document.createElement('div');
+      label.className = 'group-label';
+      label.textContent = `${groups[sides].length}d${sides}`;
+      resultsEl.appendChild(label);
+    }
+    groups[sides].forEach(d => {
+      const color = diceColors[d.sides]||'#607d8b';
+      const el = document.createElement('div');
+      el.className = 'die-result';
+      el.style.setProperty('--die-glow', diceGlows[d.sides]||'rgba(255,255,255,0.1)');
+      el.style.animationDelay = `${delayIdx*0.1}s`;
+      if(d.sides===20&&d.value===20) el.classList.add('crit');
+      if(d.sides===20&&d.value===1) el.classList.add('fail');
+      el.innerHTML = getDieSVG(d.sides,color,90)+`<span class="die-value">${d.value}</span>`+makeSparkles(d.sides);
+      resultsEl.appendChild(el);
+      delayIdx++;
+    });
+  });
+}
+
+/* ===== Core logic (unchanged) ===== */
+function buildNotation() {
+  if(!tray.length&&!hasModifier) return '';
+  const g={}; tray.forEach(s=>{g[s]=(g[s]||0)+1});
+  let p=[]; [4,6,8,10,12,20,100].forEach(s=>{if(g[s])p.push(`${g[s]}d${s}`)});
+  let str=p.join(' + ');
+  if(hasModifier&&trayModifier!==0) str+=trayModifier>0?` + ${trayModifier}`:` - ${Math.abs(trayModifier)}`;
+  return str;
+}
+function addToTray(s){if(tray.length>=20)return;tray.push(s);renderTray()}
+function removeFromTray(i){tray.splice(i,1);renderTray()}
+function removeModifier(){hasModifier=false;trayModifier=0;renderTray()}
+function addModifier(){if(hasModifier)return;hasModifier=true;trayModifier=0;renderTray();setTimeout(()=>{const i=document.getElementById('trayModInput');if(i)i.focus()},50)}
+
+function renderTray() {
+  const te=document.getElementById('trayDice'), ne=document.getElementById('trayNotation'), rb=document.getElementById('rollBtn');
+  ne.textContent=buildNotation(); rb.disabled=tray.length===0;
+  if(!tray.length&&!hasModifier){te.className='tray-dice empty';te.innerHTML='點擊上方骰子加入托盤';return}
+  te.className='tray-dice'; te.innerHTML='';
+  tray.forEach((sides,i)=>{
+    const el=document.createElement('div');el.className='tray-die';el.title=`d${sides}（點擊移除）`;
+    el.onclick=()=>removeFromTray(i);
+    el.innerHTML=getDieSVG(sides,diceColors[sides]||'#607d8b',50)+`<span class="tray-die-label">d${sides}</span>`;
+    te.appendChild(el);
+  });
+  if(hasModifier){
+    const m=document.createElement('div');m.className='tray-mod';m.title='點擊 ✕ 移除修正值';
+    m.innerHTML=`<span>±</span><input type="number" id="trayModInput" value="${trayModifier}" min="-99" max="99" onclick="event.stopPropagation()" oninput="trayModifier=parseInt(this.value)||0;document.getElementById('trayNotation').textContent=buildNotation()"><span style="cursor:pointer;color:#f44336;font-size:14px;margin-left:4px" onclick="event.stopPropagation();removeModifier()">✕</span>`;
+    te.appendChild(m);
+  }
+}
+
+function rollDice() {
+  if(!tray.length) return;
+  const ra=document.getElementById('resultsArea'), re=document.getElementById('diceResults'), rl=document.getElementById('resultsLabel');
+  ra.classList.add('show'); re.innerHTML='';
+  const notation=buildNotation(), mod=hasModifier?trayModifier:0;
+  const order=[4,6,8,10,12,20,100], groups={};
+  tray.forEach((s,i)=>{if(!groups[s])groups[s]=[];groups[s].push(i)});
+  let allRolls=new Array(tray.length), total=0, delayIdx=0, rollDetails=[];
+  order.forEach(sides=>{
+    if(!groups[sides])return;
+    const indices=groups[sides], color=diceColors[sides]||'#607d8b';
+    let gr=[];
+    if(Object.keys(groups).length>1){const l=document.createElement('div');l.className='group-label';l.textContent=`${indices.length}d${sides}`;re.appendChild(l)}
+    indices.forEach(idx=>{
+      const v=Math.floor(Math.random()*sides)+1; allRolls[idx]=v; total+=v; gr.push(v);
+      const d=document.createElement('div');d.className='die-result';
+      d.style.setProperty('--die-glow',diceGlows[sides]||'rgba(255,255,255,0.1)');
+      d.style.animationDelay=`${delayIdx*0.1}s`;
+      if(sides===20&&v===20)d.classList.add('crit');
+      if(sides===20&&v===1)d.classList.add('fail');
+      d.innerHTML=getDieSVG(sides,color,90)+`<span class="die-value">${v}</span>`+makeSparkles(sides);
+      re.appendChild(d); delayIdx++;
+    });
+    rollDetails.push({sides,rolls:gr});
+  });
+  const gt=total+mod;
+  rl.textContent=`擲骰結果 — ${notation}`;
+  document.getElementById('totalValue').textContent=gt;
+  const md=document.getElementById('modifierDisplay');
+  let dp=[]; rollDetails.forEach(g=>{dp.push(g.rolls.length===1?`[d${g.sides}: ${g.rolls[0]}]`:`[${g.rolls.length}d${g.sides}: ${g.rolls.join('+')}=${g.rolls.reduce((a,b)=>a+b,0)}]`)});
+  let detail=dp.join(' + '); if(mod!==0)detail+=` ${mod>0?'+':'−'} ${Math.abs(mod)}`;
+  md.textContent=detail;
+  let dd=[]; rollDetails.forEach(g=>{g.rolls.forEach(v=>dd.push({sides:g.sides,value:v}))});
+  rollHistory.unshift({notation,diceData:dd,modifier:mod,total:gt});
+  if(rollHistory.length>20)rollHistory.pop();
+  renderHistory();
+}
+
+function quickRoll(a,m){tray=[...a];hasModifier=m?true:false;trayModifier=m||0;renderTray();rollDice()}
+function clearTray(){tray=[];hasModifier=false;trayModifier=0;renderTray();document.getElementById('resultsArea').classList.remove('show')}
+
+function renderHistory() {
+  const s=document.getElementById('historySection'), l=document.getElementById('historyList');
+  if(!rollHistory.length){s.style.display='none';return}
+  s.style.display='block';
+  l.innerHTML=rollHistory.map(h=>{
+    let dh='';
+    h.diceData.forEach((d,i)=>{
+      if(i>0)dh+='<span class="h-plus">+</span>';
+      const c=diceColors[d.sides]||'#607d8b';
+      let cls='h-die';
+      if(d.sides===20&&d.value===20)cls+=' crit';
+      if(d.sides===20&&d.value===1)cls+=' fail';
+      dh+=`<div class="${cls}">${getDieSVG(d.sides,c,36)}<span class="h-die-val">${d.value}</span></div>`;
+    });
+    if(h.modifier&&h.modifier!==0){dh+='<span class="h-plus">+</span>';dh+=`<span class="h-mod-badge">${h.modifier>0?'+':''}${h.modifier}</span>`}
+    return `<div class="history-item" title="點擊重新擲 ${h.notation}" onclick="rerollFromHistory('${h.notation}')">
+      <div class="history-item-top"><span class="h-notation">${h.notation}</span><span class="h-total-badge">${h.total}</span></div>
+      <div class="h-dice-row">${dh}</div></div>`;
+  }).join('');
+}
+
+function clearHistory(){rollHistory=[];renderHistory()}
+function rerollFromHistory(n){
+  let t=[],m=0,hm=false;
+  n.replace(/\s/g,'').replace(/\-/g,'+-').split('+').filter(Boolean).forEach(p=>{
+    const d=p.match(/^(\d+)d(\d+)$/);
+    if(d){for(let i=0;i<parseInt(d[1]);i++)t.push(parseInt(d[2]))}
+    else{const v=parseInt(p);if(!isNaN(v)){m=v;hm=true}}
+  });
+  tray=t;hasModifier=hm;trayModifier=m;renderTray();rollDice();
+}
+
+document.querySelectorAll('.dice-btn').forEach(b=>b.addEventListener('click',()=>addToTray(parseInt(b.dataset.sides))));
+document.getElementById('addModBtn').addEventListener('click',addModifier);
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();rollDice()}
+  if(e.code==='Escape')clearTray();
+});
+</script>
+</body>
+</html>

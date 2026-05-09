@@ -1,0 +1,130 @@
+/* ===== Theme Variables ===== */
+
+/* Classic (default) */
+:root {
+  --bg: #202124;
+  --bg-image: none;
+  --card-bg: #303134;
+  --card-border: transparent;
+  --text: #e8eaed;
+  --text-dim: #9aa0a6;
+  --text-dimmer: #5f6368;
+  --accent: #ff9800;
+  --accent2: #8ab4f8;
+  --btn-bg: #8ab4f8;
+  --btn-text: #202124;
+  --btn-shadow: none;
+  --total-color: #ff9800;
+  --total-shadow: none;
+  --badge-bg: #ff9800;
+  --badge-text: #202124;
+  --badge-shadow: none;
+  --scrollbar: #5f6368;
+}
+
+/* Crystal */
+body.skin-crystal {
+  --bg: #121218;
+  --bg-image: radial-gradient(ellipse at 50% 0%, rgba(100,60,180,0.15) 0%, transparent 60%);
+  --card-bg: rgba(30,30,42,0.8);
+  --card-border: rgba(255,255,255,0.08);
+  --text: #e8eaed;
+  --text-dim: #9999bb;
+  --text-dimmer: #555566;
+  --accent: #c9a0ff;
+  --accent2: #c9a0ff;
+  --btn-bg: linear-gradient(135deg, #c9a0ff, #8060cc);
+  --btn-text: #fff;
+  --btn-shadow: 0 4px 20px rgba(160,100,255,0.3);
+  --total-color: #c9a0ff;
+  --total-shadow: 0 0 20px rgba(180,120,255,0.5);
+  --badge-bg: linear-gradient(135deg, #c9a0ff, #8060cc);
+  --badge-text: #fff;
+  --badge-shadow: 0 2px 8px rgba(160,100,255,0.3);
+  --scrollbar: #3c3c4a;
+}
+
+/* Nebula */
+body.skin-nebula {
+  --bg: #0a0005;
+  --bg-image: radial-gradient(ellipse at 50% 0%, rgba(180,40,0,0.12) 0%, rgba(80,10,0,0.08) 40%, transparent 70%),
+              radial-gradient(ellipse at 80% 80%, rgba(120,20,0,0.1) 0%, transparent 50%);
+  --card-bg: rgba(30,5,10,0.85);
+  --card-border: rgba(255,80,20,0.15);
+  --text: #e8ddd5;
+  --text-dim: #bb8866;
+  --text-dimmer: #664433;
+  --accent: #ff6b2b;
+  --accent2: #ff4500;
+  --btn-bg: linear-gradient(135deg, #ff6b2b, #cc2200);
+  --btn-text: #fff;
+  --btn-shadow: 0 4px 20px rgba(255,80,0,0.35);
+  --total-color: #ff6b2b;
+  --total-shadow: 0 0 12px rgba(255,100,0,0.5), 0 0 30px rgba(255,60,0,0.25);
+  --badge-bg: linear-gradient(135deg, #ff6b2b, #cc2200);
+  --badge-text: #fff;
+  --badge-shadow: 0 2px 10px rgba(255,80,0,0.4);
+  --scrollbar: #4a2010;
+}
+
+/* ===== Skin-specific overrides ===== */
+
+/* Header glow */
+body.skin-crystal h1 { text-shadow: 0 0 20px rgba(180,120,255,0.4); }
+body.skin-nebula h1 { text-shadow: 0 0 20px rgba(255,100,0,0.5), 0 0 40px rgba(255,60,0,0.25); }
+
+/* Dice button hover */
+body.skin-crystal .dice-btn:hover { filter: brightness(1.2) drop-shadow(0 0 8px currentColor); }
+body.skin-nebula .dice-btn:hover { filter: brightness(1.2) drop-shadow(0 0 8px rgba(255,100,0,0.6)); }
+
+/* Crystal dice buttons */
+body.skin-crystal .dice-btn[data-sides="4"]  { background: linear-gradient(135deg, #5eff9e, #34a853); }
+body.skin-crystal .dice-btn[data-sides="6"]  { background: linear-gradient(135deg, #6eeeff, #00bcd4); }
+body.skin-crystal .dice-btn[data-sides="8"]  { background: linear-gradient(135deg, #d580ff, #9c27b0); }
+body.skin-crystal .dice-btn[data-sides="10"] { background: linear-gradient(135deg, #ff6f9c, #e91e63); }
+body.skin-crystal .dice-btn[data-sides="12"] { background: linear-gradient(135deg, #ff7777, #f44336); }
+body.skin-crystal .dice-btn[data-sides="20"] { background: linear-gradient(135deg, #ffcc44, #ff9800); }
+body.skin-crystal .dice-btn[data-sides="100"]{ background: linear-gradient(135deg, #aabbcc, #607d8b); }
+
+/* Nebula dice buttons */
+body.skin-nebula .dice-btn[data-sides="4"]  { background: linear-gradient(135deg, #ff9944, #cc4400); }
+body.skin-nebula .dice-btn[data-sides="6"]  { background: linear-gradient(135deg, #ffaa33, #bb3300); }
+body.skin-nebula .dice-btn[data-sides="8"]  { background: linear-gradient(135deg, #ff7733, #aa2200); }
+body.skin-nebula .dice-btn[data-sides="10"] { background: linear-gradient(135deg, #ff5533, #991100); }
+body.skin-nebula .dice-btn[data-sides="12"] { background: linear-gradient(135deg, #ff4422, #880000); }
+body.skin-nebula .dice-btn[data-sides="20"] { background: linear-gradient(135deg, #ffcc00, #ff6600); }
+body.skin-nebula .dice-btn[data-sides="100"]{ background: linear-gradient(135deg, #ff8844, #993300); }
+
+/* Crystal die-result text */
+body.skin-crystal .die-result .die-value {
+  text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Nebula die-result text */
+body.skin-nebula .die-result .die-value {
+  text-shadow: 0 0 10px rgba(255,200,100,0.8), 0 0 20px rgba(255,100,0,0.4), 0 2px 4px rgba(0,0,0,0.7);
+}
+
+/* Nebula die-result glow pulse */
+body.skin-nebula .die-result {
+  animation: dieAppearBounce 0.5s ease-out, nebulaGlow 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(255,100,0,0.4)) drop-shadow(0 0 16px rgba(255,50,0,0.2));
+}
+body.skin-nebula .die-result.crit {
+  animation: dieAppearBounce 0.5s ease-out, nebulaCritGlow 1.2s ease-in-out infinite;
+}
+body.skin-nebula .die-result.crit .die-value {
+  color: #ffe066;
+  animation: critPulse 0.6s ease-in-out infinite alternate;
+}
+
+/* Nebula history & quick-roll hover */
+body.skin-nebula .history-item:hover {
+  border-color: rgba(255,100,20,0.3);
+  box-shadow: 0 0 12px rgba(255,80,0,0.15);
+}
+body.skin-nebula .quick-btn:hover {
+  background: rgba(255,80,0,0.12);
+  border-color: rgba(255,80,20,0.3);
+  box-shadow: 0 0 8px rgba(255,80,0,0.15);
+}

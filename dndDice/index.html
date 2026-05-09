@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#202124">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>D&D 骰子擲骰器</title>
+<link rel="stylesheet" href="css/skins.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+
+<!-- Skin selector -->
+<div class="skin-toggle">
+  <div class="skin-toggle-label">SKIN</div>
+  <div class="skin-options">
+    <div class="skin-opt active" data-skin="classic" onclick="setSkin('classic')">
+      <span style="font-size:16px">🎲</span>
+      <span class="skin-opt-tip">經典</span>
+    </div>
+    <div class="skin-opt" data-skin="crystal" onclick="setSkin('crystal')">
+      <span style="font-size:16px">💎</span>
+      <span class="skin-opt-tip">水晶</span>
+    </div>
+    <div class="skin-opt" data-skin="nebula" onclick="setSkin('nebula')">
+      <span style="font-size:16px">🔥</span>
+      <span class="skin-opt-tip">星雲烈焰</span>
+    </div>
+  </div>
+</div>
+
+<div class="header-row"><h1>D&D 骰子擲骰器</h1></div>
+<p class="subtitle">點擊骰子加入托盤，可混搭不同骰子，然後一起擲！</p>
+
+<div class="dice-selector">
+  <button class="dice-btn" data-sides="4" title="加入 d4">d4</button>
+  <button class="dice-btn" data-sides="6" title="加入 d6">d6</button>
+  <button class="dice-btn" data-sides="8" title="加入 d8">d8</button>
+  <button class="dice-btn" data-sides="10" title="加入 d10">d10</button>
+  <button class="dice-btn" data-sides="12" title="加入 d12">d12</button>
+  <button class="dice-btn" data-sides="20" title="加入 d20">d20</button>
+  <button class="dice-btn" data-sides="100" title="加入 d100">d100</button>
+  <button class="mod-btn" id="addModBtn" title="加入修正值">±</button>
+</div>
+
+<div class="tray-area">
+  <div class="tray-header">
+    <span class="tray-label">擲骰托盤</span>
+    <span class="tray-notation" id="trayNotation"></span>
+  </div>
+  <div class="tray-dice empty" id="trayDice">點擊上方骰子加入托盤</div>
+</div>
+
+<div class="actions">
+  <button class="roll-btn" id="rollBtn" onclick="rollDice()" disabled>擲出骰子</button>
+  <button class="clear-btn" onclick="clearTray()">清除</button>
+</div>
+
+<div class="results-area" id="resultsArea">
+  <div class="results-label" id="resultsLabel">擲骰結果</div>
+  <div class="dice-results" id="diceResults"></div>
+  <div class="total-section">
+    <div>
+      <div class="modifier-display" id="modifierDisplay"></div>
+      <div style="display:flex;align-items:center;gap:12px;justify-content:flex-end;">
+        <span class="total-label">總計</span>
+        <span class="total-value" id="totalValue">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="quick-rolls">
+  <h3>快速擲骰</h3>
+  <div class="quick-btns">
+    <button class="quick-btn" onclick="quickRoll([20])">1d20</button>
+    <button class="quick-btn" onclick="quickRoll([20,20])">2d20</button>
+    <button class="quick-btn" onclick="quickRoll([20],5)">1d20+5</button>
+    <button class="quick-btn" onclick="quickRoll([6,6,6,6])">4d6</button>
+    <button class="quick-btn" onclick="quickRoll([6,6])">2d6</button>
+    <button class="quick-btn" onclick="quickRoll([12])">1d12</button>
+    <button class="quick-btn" onclick="quickRoll([10])">1d10</button>
+    <button class="quick-btn" onclick="quickRoll([8])">1d8</button>
+    <button class="quick-btn" onclick="quickRoll([8,8],3)">2d8+3</button>
+    <button class="quick-btn" onclick="quickRoll([6,6,6,6,6,6,6,6])">8d6 (火球)</button>
+    <button class="quick-btn" onclick="quickRoll([6,6],4)">2d6+4 (巨劍)</button>
+    <button class="quick-btn" onclick="quickRoll([20,8],5)">1d20+1d8+5</button>
+    <button class="quick-btn" onclick="quickRoll([100])">1d100</button>
+  </div>
+</div>
+
+<div class="history" id="historySection" style="display:none;">
+  <div class="history-header">
+    <h3>擲骰歷史</h3>
+    <button class="history-clear-btn" onclick="clearHistory()">清除歷史</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<div class="hint">按 Space 或 Enter 快速擲骰 ｜ 按 Esc 清除托盤</div>
+
+<!-- Shared SVG defs for crystal skin -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="cg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a0ffc8" stop-opacity="0.9"/><stop offset="40%" stop-color="#34a853" stop-opacity="0.75"/><stop offset="100%" stop-color="#1a6e30" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a0f0ff" stop-opacity="0.9"/><stop offset="40%" stop-color="#00bcd4" stop-opacity="0.75"/><stop offset="100%" stop-color="#006978" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8b0ff" stop-opacity="0.9"/><stop offset="40%" stop-color="#9c27b0" stop-opacity="0.75"/><stop offset="100%" stop-color="#5c1070" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg10" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffa0c0" stop-opacity="0.9"/><stop offset="40%" stop-color="#e91e63" stop-opacity="0.75"/><stop offset="100%" stop-color="#880038" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg12" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffa0a0" stop-opacity="0.9"/><stop offset="40%" stop-color="#f44336" stop-opacity="0.75"/><stop offset="100%" stop-color="#8e1a10" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg20" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe090" stop-opacity="0.9"/><stop offset="40%" stop-color="#ff9800" stop-opacity="0.75"/><stop offset="100%" stop-color="#a05800" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="cg100" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c0d0e0" stop-opacity="0.9"/><stop offset="40%" stop-color="#607d8b" stop-opacity="0.75"/><stop offset="100%" stop-color="#36474f" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="60%" y2="60%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.5"/><stop offset="40%" stop-color="#fff" stop-opacity="0.1"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="innerGlow" cx="35%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.3"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<script src="js/dice-svg.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
