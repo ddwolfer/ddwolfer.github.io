@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>退租家具清單</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --border:#e2e4e9;
+    --text:#1c1d21; --muted:#7a7d85;
+    --want:#1f9d57; --want-soft:#e7f6ee;
+    --drop:#8a8d94; --drop-soft:#eceef1;
+    --accent:#2563eb;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#16171a; --card:#212327; --border:#33363c;
+      --text:#f1f2f4; --muted:#9a9da5;
+      --want:#34c759; --want-soft:#16331f;
+      --drop:#8a8d94; --drop-soft:#2a2c31;
+      --accent:#4f8cff;
+      --shadow:0 1px 3px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.5;
+    padding-bottom:88px; /* 留空給底部固定按鈕列 */
+  }
+  .container{max-width:680px;margin:0 auto;padding:0 14px;}
+
+  header{padding:22px 14px 6px;max-width:680px;margin:0 auto;}
+  header h1{font-size:1.45rem;font-weight:700;letter-spacing:.01em;}
+  header p{color:var(--muted);font-size:.92rem;margin-top:6px;}
+
+  /* 篩選 / 計數列(置頂吸附) */
+  .filters{
+    position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:saturate(1.4) blur(8px);
+    border-bottom:1px solid var(--border);
+    margin-top:12px;
+  }
+  .filters-inner{max-width:680px;margin:0 auto;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .chip{
+    font-size:.86rem;font-weight:600;padding:7px 13px;border-radius:999px;
+    border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;
+    transition:.15s;
+  }
+  .chip b{color:var(--text);}
+  .chip.on{background:var(--text);color:var(--bg);border-color:var(--text);}
+  .chip.on b{color:var(--bg);}
+  .reset{margin-left:auto;font-size:.82rem;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;padding:6px;}
+
+  /* 家具格 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:16px 0 8px;}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-left:5px solid var(--want);
+    border-radius:16px;overflow:hidden;box-shadow:var(--shadow);transition:.18s;
+  }
+  .card.is-drop{border-left-color:var(--drop);opacity:.62;}
+  .card .thumb{
+    width:100%;aspect-ratio:4/3;object-fit:contain;background:#fff;display:block;cursor:zoom-in;
+  }
+  .cbody{padding:11px 13px 13px;}
+  .cname{font-size:1.05rem;font-weight:600;margin-bottom:9px;}
+  .seg{display:flex;gap:8px;}
+  .seg-btn{
+    flex:1;font-size:.98rem;font-weight:700;padding:9px 6px;border-radius:11px;cursor:pointer;
+    border:1.6px solid var(--border);background:var(--bg);color:var(--muted);transition:.13s;
+  }
+  .seg-btn.want.on{background:var(--want);border-color:var(--want);color:#fff;}
+  .seg-btn.drop.on{background:var(--drop);border-color:var(--drop);color:#fff;}
+
+  /* 底部固定按鈕列 */
+  .actionbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:color-mix(in srgb,var(--card) 92%,transparent);
+    backdrop-filter:blur(10px);border-top:1px solid var(--border);
+    padding:11px 14px;display:flex;gap:10px;max-width:100%;
+  }
+  .actionbar .inner{max-width:680px;margin:0 auto;width:100%;display:flex;gap:10px;}
+  .act{
+    flex:1;font-size:.98rem;font-weight:700;padding:13px 8px;border-radius:13px;cursor:pointer;
+    border:1.6px solid var(--border);background:var(--card);color:var(--text);
+  }
+  .act.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* 提示 toast */
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(12px);
+    background:#1c1d21;color:#fff;padding:11px 18px;border-radius:999px;font-size:.88rem;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:50;
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* 放大檢視 */
+  .lightbox{
+    position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.88);
+    display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;
+  }
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏠 退租家具清單</h1>
+  <p>房東您好,以下是我目前的家具,每件麻煩您確認「<b>要</b>」或「<b>不要</b>」。若有錯或想調整的地方,再跟我說就好,謝謝您 🙏</p>
+</header>
+
+<div class="filters">
+  <div class="filters-inner">
+    <button class="chip on" onclick="setFilter('all',this)">全部 <b id="count-all">0</b></button>
+    <button class="chip" onclick="setFilter('want',this)">✅ 要 <b id="count-want">0</b></button>
+    <button class="chip" onclick="setFilter('drop',this)">⬜ 不要 <b id="count-drop">0</b></button>
+    <button class="reset" onclick="resetAll()">重設</button>
+  </div>
+</div>
+
+<main class="container">
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="actionbar">
+  <div class="inner">
+    <button class="act primary" onclick="copyShareLink()">🔗 複製分享連結</button>
+    <button class="act" onclick="copyList()">📋 複製文字清單</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src="" alt=""></div>
+
+<script>
+/* ============================================================
+   家具清單 —— 這是唯一需要維護的資料。
+   新增家具:把照片放進 images/,在下面加一行 {file:"檔名.png", name:"顯示名稱"}。
+   順序可自行調整(目前依房間分組:客廳→臥室→書房→餐廚→玄關/其他)。
+   ============================================================ */
+const FURNITURE = [
+  {file:"沙發.png",   name:"沙發"},
+  {file:"客廳桌.png", name:"客廳桌"},
+  {file:"客廳邊桌.png",name:"客廳邊桌"},
+  {file:"小桌子.png", name:"小桌子"},
+  {file:"床架.png",   name:"床架"},
+  {file:"床墊.png",   name:"床墊"},
+  {file:"深色衣櫃.png",name:"深色衣櫃"},
+  {file:"化妝桌.png", name:"化妝桌"},
+  {file:"櫃子.png",   name:"櫃子"},
+  {file:"電腦桌.png", name:"電腦桌"},
+  {file:"電腦椅.png", name:"電腦椅"},
+  {file:"餐桌椅.png", name:"餐桌椅"},
+  {file:"冰箱.png",   name:"冰箱"},
+  {file:"廚房架子.png",name:"廚房架子"},
+  {file:"廚房櫃子.png",name:"廚房櫃子"},
+  {file:"鞋架.png",   name:"鞋架"},
+  {file:"穿鞋椅.png", name:"穿鞋椅"},
+  {file:"曬衣架.png", name:"曬衣架"},
+];
+
+const WANT="want", DROP="drop";
+const STORAGE_KEY="furniture-states-v1";
+let states=[];          // 每件的狀態:'want' | 'drop'
+let currentFilter="all";
+
+/* ---- 純函式(狀態編碼,放在網址裡分享) ---- */
+function encodeStates(arr){ return arr.map(s=>s===WANT?"1":"0").join(""); }
+function decodeStates(str,n){
+  const out=[];
+  for(let i=0;i<n;i++){ out.push(str&&str[i]==="0"?DROP:WANT); } // 預設為「要」
+  return out;
+}
+function buildTextList(){
+  const want=[],drop=[];
+  FURNITURE.forEach((f,i)=>{ (states[i]===DROP?drop:want).push(f.name); });
+  let t="🏠 退租家具確認清單\n\n";
+  t+="✅ 要（"+want.length+" 件）\n"+(want.length?want.map(n=>"・"+n).join("\n"):"（無）")+"\n\n";
+  t+="⬜ 不要（"+drop.length+" 件）\n"+(drop.length?drop.map(n=>"・"+n).join("\n"):"（無）");
+  return t;
+}
+
+/* ---- 載入 / 儲存 ---- */
+function loadStates(){
+  const fromUrl=new URLSearchParams(location.search).get("s");
+  if(fromUrl){ states=decodeStates(fromUrl,FURNITURE.length); }
+  else{
+    const saved=localStorage.getItem(STORAGE_KEY);
+    states=decodeStates(saved||"",FURNITURE.length);
+  }
+}
+function persist(){
+  const enc=encodeStates(states);
+  try{ localStorage.setItem(STORAGE_KEY,enc); }catch(e){}
+  try{ history.replaceState(null,"",location.pathname+"?s="+enc); }catch(e){}
+}
+
+/* ---- 畫面 ---- */
+function render(){
+  document.getElementById("grid").innerHTML=FURNITURE.map((f,i)=>cardHTML(f,i)).join("");
+  updateCounts();
+  applyFilter(currentFilter);
+}
+function cardHTML(f,i){
+  const s=states[i];
+  const src="images/"+encodeURIComponent(f.file);
+  return '<div class="card '+(s===DROP?"is-drop":"is-want")+'" data-i="'+i+'" data-state="'+s+'">'
+    +'<img class="thumb" src="'+src+'" alt="'+f.name+'" loading="lazy" onclick="openLightbox(\''+src+'\')">'
+    +'<div class="cbody"><div class="cname">'+f.name+'</div>'
+    +'<div class="seg">'
+    +'<button class="seg-btn want '+(s===WANT?"on":"")+'" onclick="setState('+i+',\''+WANT+'\')">要</button>'
+    +'<button class="seg-btn drop '+(s===DROP?"on":"")+'" onclick="setState('+i+',\''+DROP+'\')">不要</button>'
+    +'</div></div></div>';
+}
+function setState(i,s){
+  states[i]=s;
+  persist();
+  const card=document.querySelector('.card[data-i="'+i+'"]');
+  if(card){
+    card.dataset.state=s;
+    card.classList.toggle("is-drop",s===DROP);
+    card.querySelector(".seg-btn.want").classList.toggle("on",s===WANT);
+    card.querySelector(".seg-btn.drop").classList.toggle("on",s===DROP);
+  }
+  updateCounts();
+  applyFilter(currentFilter);
+}
+function updateCounts(){
+  let w=0,d=0; states.forEach(s=> s===DROP?d++:w++);
+  document.getElementById("count-all").textContent=states.length;
+  document.getElementById("count-want").textContent=w;
+  document.getElementById("count-drop").textContent=d;
+}
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  el.classList.add("on");
+  applyFilter(f);
+}
+function applyFilter(f){
+  document.querySelectorAll(".card").forEach(c=>{
+    c.style.display=(f==="all"||c.dataset.state===f)?"":"none";
+  });
+}
+function resetAll(){
+  if(!confirm("確定要把全部重設為「要」嗎?")) return;
+  states=FURNITURE.map(()=>WANT);
+  persist(); render();
+  toast("已全部重設為「要」");
+}
+
+/* ---- 複製 ---- */
+async function copyText(text){
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text); return true;
+    }
+  }catch(e){}
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok=document.execCommand("copy"); document.body.removeChild(ta); return ok;
+  }catch(e){ return false; }
+}
+async function copyShareLink(){
+  persist();
+  const ok=await copyText(location.href);
+  toast(ok?"已複製分享連結 🔗  貼到 LINE 傳給房東即可":"複製失敗,請手動複製網址列");
+}
+async function copyList(){
+  const text=buildTextList();
+  const ok=await copyText(text);
+  if(ok){ toast("已複製文字清單 📋"); }
+  else{ window.prompt("請手動複製以下清單:",text); }
+}
+
+/* ---- 放大檢視 ---- */
+function openLightbox(src){
+  document.getElementById("lightbox-img").src=src;
+  document.getElementById("lightbox").classList.add("show");
+}
+function closeLightbox(){ document.getElementById("lightbox").classList.remove("show"); }
+
+/* ---- toast ---- */
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove("show"),2600);
+}
+
+/* ---- 啟動 ---- */
+loadStates();
+render();
+</script>
+</body>
+</html>
