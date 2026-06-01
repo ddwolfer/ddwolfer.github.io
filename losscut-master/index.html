@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>停損大師 - LOSS CUT MASTER</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#0a0c1c; --bg1:#161a3a; --panel:#0c0f24; --line:#23284d;
+    --green:#37e87a; --greenH:#7dffab; --red:#ff4d5e; --redH:#ff8a94;
+    --gold:#ffcc3d; --goldD:#9e7c2e; --blue:#3d7dff; --blueH:#79a6ff;
+    --txt:#eef1ff; --dim:#8a90c0;
+    /* 中文 fallback：DotGothic16 為日文像素字型，未涵蓋全部繁中字 */
+    --cjk:'DotGothic16','Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%; background:#000; overflow:hidden;}
+  body{
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--cjk);
+    background:
+      radial-gradient(circle at 50% 40%, #1a1f44 0%, #0a0c1c 70%, #050610 100%);
+    padding:8px;
+  }
+  .machine{
+    width:100%; max-width:460px;
+    display:flex; flex-direction:column; gap:8px;
+    user-select:none;
+  }
+  /* ===== HUD ===== */
+  .hud{
+    display:flex; align-items:stretch; justify-content:space-between;
+    gap:6px;
+    background:linear-gradient(#171c40,#0e1230);
+    border:2px solid var(--line);
+    border-radius:8px; padding:7px 9px;
+    box-shadow:0 3px 0 #05060f, inset 0 0 0 2px #0a0d22;
+  }
+  .hud .cell{display:flex; flex-direction:column; gap:3px; justify-content:center;}
+  .hud .lbl{font-size:8px; color:var(--dim); font-family:'Press Start 2P',monospace; letter-spacing:.5px;}
+  .hud .val{font-size:12px; color:var(--txt); font-family:'Press Start 2P',monospace;}
+  .hud .stage .val{color:var(--gold);}
+  .hud .acct .val{color:var(--greenH);}
+  .hud .lives{align-items:flex-end;}
+  .hearts{display:flex; gap:3px; margin-top:1px;}
+  .heart{width:13px; height:13px; position:relative; background:#2a2f55;
+    clip-path:polygon(50% 100%,0 35%,18% 0,50% 22%,82% 0,100% 35%);}
+  .heart .q{position:absolute; width:51%; height:51%; background:var(--red); transition:opacity .18s;}
+  .heart .tl{top:0; left:0;} .heart .tr{top:0; right:0;}
+  .heart .bl{bottom:0; left:0;} .heart .br{bottom:0; right:0;}
+  .heart.lit{box-shadow:0 0 5px rgba(255,77,94,.6);}
+
+  /* ===== SCREEN ===== */
+  .screenWrap{position:relative; border-radius:10px; overflow:hidden;
+    border:3px solid #2a3060; box-shadow:0 0 0 3px #05060f, 0 6px 0 #04050d;}
+  canvas{display:block; width:100%; height:auto; image-rendering:pixelated;
+    image-rendering:crisp-edges; background:#0a0c1c;}
+  /* CRT overlays */
+  .scan{position:absolute; inset:0; pointer-events:none; z-index:3;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.18) 3px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:multiply;}
+  .vig{position:absolute; inset:0; pointer-events:none; z-index:4;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.7), inset 0 0 18px rgba(40,60,160,.25);}
+
+  /* ===== CONTROLS ===== */
+  .controls{display:flex; gap:8px;}
+  .btn{
+    flex:1; border:none; cursor:pointer; color:#fff;
+    font-family:var(--cjk); font-weight:700;
+    border-radius:9px; padding:14px 6px 16px; position:relative;
+    transition:transform .04s, box-shadow .04s; touch-action:manipulation;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .btn .jp{font-size:19px; line-height:1; letter-spacing:1px;}
+  .btn .en{font-size:8px; font-family:'Press Start 2P',monospace; opacity:.85;}
+  .btn.cut{background:linear-gradient(#ff5e6e,#d62d3e); box-shadow:0 5px 0 #8c0f1c;}
+  .btn.hold{background:linear-gradient(#4d8bff,#2657d6); box-shadow:0 5px 0 #14338f;}
+  .btn.prim{background:linear-gradient(#ffd45a,#e0a91f); color:#3a2a05; box-shadow:0 5px 0 #8a6410;}
+  .btn.prim .jp{font-size:18px;} .btn.prim .en{color:#5a4205;}
+  .btn:active{transform:translateY(4px); box-shadow:0 1px 0 #000;}
+  .btn.flash{animation:bf .18s;}
+  @keyframes bf{0%{filter:brightness(2)}100%{filter:brightness(1)}}
+  .hidden{display:none !important;}
+
+  .footer{display:flex; justify-content:space-between; align-items:center; padding:0 2px;}
+  .mini{background:none; border:2px solid var(--line); color:var(--dim);
+    font-family:'Press Start 2P',monospace; font-size:8px; padding:6px 9px;
+    border-radius:7px; cursor:pointer;}
+  .mini:active{transform:translateY(2px);}
+  .tag{font-family:'Press Start 2P',monospace; font-size:8px; color:var(--goldD); letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="machine">
+  <div class="hud">
+    <div class="cell stage"><span class="lbl">STAGE</span><span class="val" id="hStage">1</span></div>
+    <div class="cell acct"><span class="lbl">餘額</span><span class="val" id="hAcct">¥1,000,000</span></div>
+    <div class="cell lives"><span class="lbl">LIFE</span><div class="hearts" id="hHearts"></div></div>
+  </div>
+
+  <div class="screenWrap">
+    <canvas id="game" width="360" height="344"></canvas>
+    <div class="scan"></div>
+    <div class="vig"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn prim" id="btnPrim"><span class="jp">▶ 開始</span><span class="en">START</span></button>
+    <button class="btn cut hidden" id="btnCut"><span class="jp">砍倉</span><span class="en">CUT</span></button>
+    <button class="btn hold hidden" id="btnHold"><span class="jp">續抱</span><span class="en">HOLD</span></button>
+  </div>
+
+  <div class="footer">
+    <button class="mini" id="btnScore">排行</button>
+    <span class="tag">Pepper∞</span>
+    <button class="mini" id="btnHowto">? HELP</button>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const W = cv.width, H = cv.height;
+// 中文字型堆疊（Canvas 用）：DotGothic16 缺字時自動 fallback
+const CJK = "'DotGothic16','Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif";
+
+// ---------- palette ----------
+const C = {
+  bg:'#0a0c1c', grid:'#1a1f44', gridDim:'#13173a', line:'#23284d',
+  green:'#37e87a', greenH:'#9dffc0', greenD:'#0f7a3e',
+  red:'#ff4d5e', redH:'#ff9aa3', redD:'#8c1622',
+  gold:'#ffcc3d', goldD:'#9e7c2e', blue:'#3d7dff',
+  txt:'#eef1ff', dim:'#7e84b8', white:'#ffffff'
+};
+
+// ---------- audio ----------
+let AC=null, muted=false, masterGain=null;
+function initAudio(){
+  if(AC) return;
+  try{ AC=new (window.AudioContext||window.webkitAudioContext)();
+    masterGain=AC.createGain(); masterGain.gain.value=.5; masterGain.connect(AC.destination);
+  }catch(e){}
+}
+function beep(freq,dur,type='square',vol=.3,slideTo=null){
+  if(!AC||muted) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,AC.currentTime);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,AC.currentTime+dur);
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);
+  o.connect(g); g.connect(masterGain); o.start(); o.stop(AC.currentTime+dur);
+}
+function noise(dur,vol=.4){
+  if(!AC||muted) return;
+  const n=Math.floor(AC.sampleRate*dur), buf=AC.createBuffer(1,n,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=AC.createBufferSource(); s.buffer=buf;
+  const g=AC.createGain(); g.gain.value=vol; const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900;
+  s.connect(f); f.connect(g); g.connect(masterGain); s.start();
+}
+const sfx={
+  click:()=>beep(440,.06,'square',.25),
+  hold:()=>beep(300,.05,'triangle',.18),
+  cut:()=>{beep(700,.12,'sawtooth',.3,140);},
+  coin:()=>{beep(988,.07,'square',.3); setTimeout(()=>beep(1319,.12,'square',.3),70);},
+  profit:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.12,'square',.28),i*55));},
+  combo:(n)=>{const base=600+Math.min(n,12)*40; beep(base,.08,'square',.3); setTimeout(()=>beep(base*1.5,.12,'square',.3),60);},
+  losscut:()=>{noise(.4,.5); beep(160,.4,'sawtooth',.35,50);},
+  stage:()=>{[392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.14,'triangle',.3),i*90));},
+  rank:()=>{[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>beep(f,.16,'square',.3),i*100));},
+  heart:()=>beep(70,.18,'sine',.5,55),
+  news:()=>{ beep(900,.1,'square',.32); setTimeout(()=>beep(680,.1,'square',.32),110); setTimeout(()=>beep(900,.12,'square',.32),220); noise(.25,.35); },
+};
+
+// ---------- game state ----------
+const START_CASH=1000000;
+const LOT=50000;            // 價格每變動 1.00 對應的損益（¥）
+const LOSSCUT_YEN=60000;    // 強制停損門檻
+const TRADES_PER_STAGE=5;
+
+let state={};
+function resetGame(){
+  state={
+    phase:'title',
+    cash:START_CASH, lives:3, stage:1, tradeInStage:0,
+    score:0, combo:0, maxCombo:0, stageBonus:0,
+    losersCutClean:0, losersTotal:0, tradesPlayed:0,
+    trade:null, idx:0, cut:false, ended:false,
+    revealN:0, result:null,
+    shake:0, flash:null, particles:[], floats:[],
+    popup:null, mascot:{expr:'calm', t:0},
+    heartT:0, idle:0, t:0,
+    fever:false, consecLosscut:0, denialLost:0, newRecord:false,
+  };
+}
+resetGame();
+
+// ---------- best record (persists when opened as a local file) ----------
+function loadScores(){ try{ const s=localStorage.getItem('lcm_scores'); if(s) return JSON.parse(s); }catch(e){} return []; }
+function saveScores(a){ try{ localStorage.setItem('lcm_scores', JSON.stringify(a)); }catch(e){} }
+let scores=loadScores();                 // top 5, sorted desc
+let best=scores[0]||{score:0, rank:'-', trades:0};
+
+// ---------- trade generation : ROGUELIKE RANDOM ENGINE ----------
+function rr(a,b){ return a+Math.random()*(b-a); }
+const NEWS_CHANCE = 0.02; // ~2% per trade : 經濟指標衝擊（瞬間急漲/急跌）
+
+// describe what randomly happened (shown after the decision)
+function tradeName(t){
+  if(t.isNews) return t.newsDown ? {jp:'經濟指標衝擊',en:'NEWS CRASH'} : {jp:'指標急漲',en:'NEWS SPIKE'};
+  const c=t.candles, n=t.n, net=c[n-1].close-t.entry;
+  let mn=Infinity,mx=-Infinity; for(const k of c){ if(k.close<mn)mn=k.close; if(k.close>mx)mx=k.close; }
+  const up=mx-t.entry, dn=t.entry-mn, rangeP=mx-mn;
+  if(up>0.5 && dn>0.45) return net>=0 ? {jp:'洗盤→反彈',en:'SHAKEOUT'} : {jp:'高檔反轉',en:'REVERSAL'};
+  if(net>0.6)  return {jp:'上升趨勢',en:'UPTREND'};
+  if(net<-0.6) return {jp:'下降趨勢',en:'DOWNTREND'};
+  if(rangeP>0.7) return {jp:'劇烈震盪',en:'WHIPSAW'};
+  return {jp:'盤整',en:'CHOP'};
+}
+
+function genTrade(stage){
+  const n = 11 + Math.floor(Math.random()*6);
+  const entry = 146 + Math.random()*8;
+  // rare economic-indicator shock: one random candle gets a violent move
+  const isNews = Math.random()<NEWS_CHANCE;
+  const newsAt = 2 + Math.floor(Math.random()*Math.max(1,n-3));
+  const newsDown = Math.random()<0.55;
+
+  const candles=[]; let prev=entry;
+  for(let i=0;i<n;i++){
+    let close;
+    if(i===0){ close=entry; }                       // entry candle (flat)
+    else {
+      // TRUE per-candle randomness: independent direction + independent length
+      const downP = 0.50 + Math.min(0.12, stage*0.02); // +2%/level, caps at +12% (62%) by Lv6
+      const dir = Math.random()<downP ? -1 : 1;
+      const body = Math.random()<0.18 ? rr(0.30,0.65) : rr(0.06,0.24); // mostly small, sometimes long
+      let mv = dir*body;
+      if(isNews && i===newsAt) mv = (newsDown?-1:1)*rr(1.3,2.5);        // shock overrides
+      close = prev + mv;
+    }
+    const open=prev, w=Math.abs(close-open);
+    const hi=Math.max(open,close)+Math.random()*Math.max(0.03, w*0.2);
+    const lo=Math.min(open,close)-Math.random()*Math.max(0.03, w*0.2);
+    candles.push({open,close,hi,lo, news:(isNews&&i===newsAt)});
+    prev=close;
+  }
+  const t={entry, candles, n, isNews, newsAt:(isNews?newsAt:-1), newsDown};
+  t.label=tradeName(t);
+  return t;
+}
+function plAt(i){ return (state.trade.candles[i].close - state.trade.entry)*LOT; }
+function gaugeZone(pl){
+  if(pl>=0) return 'green';
+  const r=-pl/LOSSCUT_YEN;
+  return r<0.42 ? 'yellow' : 'red';
+}
+
+// ---------- flow ----------
+function startTrade(){
+  state.trade=genTrade(state.stage);
+  state.idx=0; state.cut=false; state.ended=false;
+  state.revealN=0; state.result=null; state.idle=0;
+  state.mascot={expr:'calm',t:0};
+  state.phase='play'; setButtons();
+}
+function nextCandle(){ // HOLD
+  if(state.phase!=='play') return;
+  sfx.hold(); state.idle=0;
+  if(state.idx < state.trade.n-1){
+    state.idx++;
+    if(state.trade.candles[state.idx].news) triggerNews();
+    const loPL=(state.trade.candles[state.idx].lo - state.trade.entry)*LOT;  // wick low
+    if(loPL <= -LOSSCUT_YEN){ forcedLosscut(); return; }   // a wick touching the line = forced losscut
+    spawnRevealPop();
+  } else {
+    autoClose(); // ran out of candles -> realize at last
+  }
+}
+function triggerNews(){
+  state.shake=26; sfx.news();
+  state.flash={c: state.trade.newsDown?C.red:C.green, a:.65};
+  spawnFloat(state.trade.newsDown?"!! 經濟指標 暴跌 !!":"!! 經濟指標 急漲 !!",
+             state.trade.newsDown?C.redH:C.greenH, W/2, 72);
+}
+function spawnRevealPop(){
+  const pl=plAt(state.idx), z=gaugeZone(pl);
+  if(z==='red'){ state.mascot={expr:'panic',t:9999}; if(state.t%2===0) sfx.heart && 0; }
+  else if(z==='yellow') state.mascot={expr:'sweat',t:9999};
+  else state.mascot={expr:'calm',t:9999};
+}
+function doCut(){
+  if(state.phase!=='play') return;
+  sfx.cut(); state.idle=0; state.cut=true;
+  const pl=plAt(state.idx);
+  state.shake=6; spawnSlash();
+  // what holding would REALLY give: a wick touching the losscut line = forced liquidation
+  const lcPrice=state.trade.entry - LOSSCUT_YEN/LOT;
+  let finalPL=plAt(state.trade.n-1);
+  for(let i=state.idx+1;i<state.trade.n;i++){ if(state.trade.candles[i].lo<=lcPrice){ finalPL=-LOSSCUT_YEN; break; } }
+  state.consecLosscut=0;                  // you DID cut -> denial streak broken
+  let pts=0, kind, comboUp=false;
+  if(pl>=0){
+    state.cash+=pl;                       // you banked this profit (real money) either way
+    if(finalPL > pl){
+      // it kept rising -> took profit TOO EARLY -> negative evaluation
+      kind='early_tp'; comboUp=false; state.lives-=0.25;   // 太早獲利了結 -> 生命 -1/4
+      beep(220,.2,'sawtooth',.3,110); setTimeout(()=>sfx.heart(),90); state.shake=10; state.mascot={expr:'dizzy',t:55}; state.flash={c:C.red,a:.32};
+    } else {
+      // banked at a good point (holding would've been same or worse)
+      kind='profit'; comboUp=true; pts=Math.round(pl/100);
+      sfx.profit(); spawnCoins(pl); state.mascot={expr:'cool',t:60}; state.flash={c:C.green,a:.35};
+    }
+  } else {
+    state.cash+=pl;                       // a loss is a loss: realize it
+    if(finalPL > pl){
+      // price ROSE after you cut (loss would've shrunk, or turned to profit) -> too early
+      kind='early'; comboUp=false;
+      state.losersTotal++; state.lives-=0.25;   // 太早停損 -> 生命 -1/4
+      beep(220,.2,'sawtooth',.3,110); setTimeout(()=>sfx.heart(),90); state.shake=11; state.mascot={expr:'dizzy',t:55}; state.flash={c:C.red,a:.38};
+    } else {
+      // price kept DROPPING after you cut -> you avoided a deeper loss -> nice cut
+      kind='goodcut'; comboUp=true;
+      const saved=pl-finalPL;             // positive: deeper loss avoided
+      pts = Math.max(5, Math.round((55000 - Math.min(55000, -pl))/250) + Math.round(saved/120));
+      state.losersCutClean++; state.losersTotal++;
+      sfx.coin(); spawnCoins(Math.max(saved,12000)*0.6); state.mascot={expr:'cool',t:60}; state.flash={c:C.gold,a:.25};
+    }
+  }
+  // combo is only earned once you've actually waited at least once:
+  // an instant cut at entry (idx 0) and the final candle (idx===n-1) don't build combo (anti-cheese)
+  const comboEligible = state.idx>=1 && state.idx < state.trade.n-1;
+  if(comboUp && comboEligible){ state.combo=Math.min(10,state.combo+1); state.maxCombo=Math.max(state.maxCombo,state.combo);
+    if(state.combo>1 && state.combo%3===0) sfx.combo(state.combo);
+    if(state.combo===5){ sfx.combo(10); state.flash={c:C.gold,a:.4}; } }
+  else if(!comboUp){ state.combo=0; }     // a genuinely bad cut still breaks the combo
+  state.fever=state.combo>=5;
+  const useCombo = comboUp && comboEligible;   // only eligible good cuts get the combo/fever multiplier
+  pts=Math.max(pts,0)*(useCombo?Math.max(1,state.combo):1);
+  if(state.fever && useCombo) pts*=2;
+  state.score+=pts;
+  endTrade({kind, pl, finalPL, pts});
+}
+function forcedLosscut(){
+  state.cut=true;
+  const pl=-LOSSCUT_YEN; // realize at losscut line
+  state.cash+=pl;
+  state.combo=0; state.lives--;
+  state.fever=false;
+  state.consecLosscut++; state.denialLost += LOSSCUT_YEN;
+  state.losersTotal++;
+  state.shake=18; state.flash={c:C.red,a:.6};
+  sfx.losscut(); setTimeout(()=>sfx.heart(),120);
+  spawnExplosion();
+  state.mascot={expr:'dizzy',t:90};
+  let finalPL=plAt(state.trade.n-1);
+  endTrade({kind:'losscut', pl, finalPL, pts:0});
+}
+function autoClose(){
+  const pl=plAt(state.idx);
+  state.cash+=pl;
+  let kind, comboUp;
+  if(pl>=0){ kind='profit'; comboUp=true; sfx.profit(); spawnCoins(pl); state.mascot={expr:'cool',t:60}; state.consecLosscut=0; }
+  else { kind='loss'; comboUp=false; state.losersTotal++; beep(220,.2,'sawtooth',.3,110); state.mascot={expr:'dizzy',t:50}; state.flash={c:C.red,a:.35}; }
+  if(comboUp){ state.combo=Math.min(10,state.combo+1); state.maxCombo=Math.max(state.maxCombo,state.combo); }
+  else state.combo=0;
+  state.fever=state.combo>=5;
+  const pts = comboUp ? Math.max(1,Math.round(Math.abs(pl)/200))*Math.max(1,state.combo)*(state.fever?2:1) : 0;
+  state.score+=pts;
+  endTrade({kind, pl, finalPL:pl, pts});
+}
+function endTrade(res){
+  state.result=res; state.ended=true; state.revealN=state.idx;
+  state.phase='reveal'; state.revealClock=0; setButtons();
+  // build popup
+  const map={
+    profit:{t:'獲利了結！',sub:'時機抓得好',col:C.greenH},
+    early_tp:{t:'太早獲利了結',sub:'其實還會再漲…',col:C.redH},
+    goodcut:{t:'漂亮停損！',sub:'把損失控制住了',col:C.gold},
+    early:{t:'太早停損',sub:'砍倉後反而上漲了…',col:C.redH},
+    loss:{t:'虧損',sub:'抱到最後還是賠',col:C.redH},
+    losscut:{t:'強制停損…',sub:'凹單過頭！LIFE -1',col:C.redH},
+  };
+  state.popup={...map[res.kind], t0:0};
+}
+function afterReveal(){
+  state.tradeInStage++; state.tradesPlayed++;
+  if(state.lives<=0 || state.cash<=0){ gameOver(); return; }
+  if(state.tradeInStage>=TRADES_PER_STAGE){
+    state.stageBonus=500; state.score+=500;   // stage-clear bonus: +500 each stage
+    state.tradeInStage=0; state.stage++;
+    state.phase='stage'; state.stageClock=0; sfx.stage(); setButtons();
+  } else {
+    startTrade();
+  }
+}
+function rankOf(s){
+  if(s>=300000) return '★★★★★';
+  if(s>=200000) return '★★★★';
+  if(s>=100000) return '★★★';
+  if(s>=70000)  return 'SSS';
+  if(s>=50000)  return 'SS';
+  if(s>=40000)  return 'S';
+  if(s>=30000)  return 'A';
+  if(s>=20000)  return 'B';
+  if(s>=10000)  return 'C';
+  return 'D';
+}
+function rankColor(r){
+  return ({D:C.dim,C:'#ff9a5a',B:C.blue,A:C.greenH,S:C.gold,SS:'#ffd24a',SSS:'#ffe46a',
+    '★':C.gold,'★★':'#ffd24a','★★★':'#ffe46a','★★★★':'#fff0a0','★★★★★':'#fff7cc'})[r]||C.gold;
+}
+function gameOver(){
+  state.phase='over'; setButtons();
+  // rank is based on SCORE only, so the leaderboard stays consistent (higher score = better rank)
+  const rate = state.losersTotal? state.losersCutClean/state.losersTotal : 1;
+  state.cutRate=Math.round(rate*100);
+  state.rank=rankOf(state.score);
+  const wasTop = scores.length===0 || state.score>scores[0].score;
+  scores.push({score:state.score, rank:state.rank, trades:state.tradesPlayed});
+  scores.sort((a,b)=>b.score-a.score); scores=scores.slice(0,5); saveScores(scores);
+  best=scores[0];
+  state.newRecord = wasTop && state.score>0;
+  setTimeout(()=>sfx.rank(),300);
+}
+
+// ---------- effects ----------
+function spawnCoins(amount){
+  const n=Math.min(18, 4+Math.floor(Math.abs(amount)/6000));
+  for(let i=0;i<n;i++) state.particles.push({
+    type:'coin', x:CX(state.idx), y:CY(plAt(state.idx)),
+    vx:(Math.random()-0.5)*4, vy:-3-Math.random()*3.5, g:0.22,
+    life:40+Math.random()*20, t:0, r:3+Math.random()*2
+  });
+}
+function spawnSlash(){ state.slash={t:0, x:CX(state.idx)}; }
+function spawnExplosion(){
+  for(let i=0;i<26;i++){ const a=Math.random()*Math.PI*2, s=2+Math.random()*5;
+    state.particles.push({type:'spark', x:CX(state.idx), y:CY(plAt(state.idx)),
+      vx:Math.cos(a)*s, vy:Math.sin(a)*s, g:0.08, life:24+Math.random()*16, t:0,
+      col: Math.random()<.5?C.red:C.gold});
+  }
+}
+function spawnFloat(txt,col,x,y){ state.floats.push({txt,col,x,y,t:0,life:60}); }
+
+// ---------- coordinate mapping (chart) ----------
+const CHART={x:14, y:46, w:332, h:196};
+let priceMin=0, priceMax=1;
+function recalcRange(){
+  const cs=state.trade.candles;
+  let maxI = state.phase==='play' ? state.idx : Math.min(cs.length-1, state.revealN);
+  if(maxI<0) maxI=0;
+  let mn=Infinity,mx=-Infinity;
+  for(let i=0;i<=maxI;i++){ mn=Math.min(mn,cs[i].lo); mx=Math.max(mx,cs[i].hi); }
+  mn=Math.min(mn, state.trade.entry); mx=Math.max(mx, state.trade.entry);
+  let span=mx-mn; const MINSPAN=0.7;
+  if(span<MINSPAN){ const mid=(mx+mn)/2; mn=mid-MINSPAN/2; mx=mid+MINSPAN/2; span=MINSPAN; }
+  const pad=span*0.14+0.04; priceMin=mn-pad; priceMax=mx+pad;
+}
+function CY(pl){ const price=state.trade.entry+pl/LOT;
+  return CHART.y+CHART.h-((price-priceMin)/(priceMax-priceMin))*CHART.h; }
+function priceY(price){ return CHART.y+CHART.h-((price-priceMin)/(priceMax-priceMin))*CHART.h; }
+function CX(i){ const slots=state.trade.n; const cw=CHART.w/slots; return CHART.x+cw*i+cw/2; }
+
+// ---------- rendering ----------
+function clear(){ ctx.fillStyle=C.bg; ctx.fillRect(0,0,W,H); }
+function px(x){ return Math.round(x); }
+
+function drawGrid(){
+  ctx.strokeStyle=C.gridDim; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ const y=px(CHART.y+CHART.h*i/4)+.5;
+    ctx.beginPath(); ctx.moveTo(CHART.x,y); ctx.lineTo(CHART.x+CHART.w,y); ctx.stroke(); }
+  for(let i=0;i<=6;i++){ const x=px(CHART.x+CHART.w*i/6)+.5;
+    ctx.beginPath(); ctx.moveTo(x,CHART.y); ctx.lineTo(x,CHART.y+CHART.h); ctx.stroke(); }
+}
+function drawCandles(){
+  const cs=state.trade.candles, slots=state.trade.n, cw=CHART.w/slots;
+  const bw=Math.max(5, cw*0.62);
+  // entry dashed line
+  const ey=px(priceY(state.trade.entry))+.5;
+  ctx.strokeStyle=C.blue; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(CHART.x,ey); ctx.lineTo(CHART.x+CHART.w,ey); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=C.blue; ctx.font="8px 'Press Start 2P'"; ctx.textAlign='left';
+  ctx.fillText("ENTRY", CHART.x+2, ey-3);
+
+  // losscut line
+  const lcPrice=state.trade.entry - LOSSCUT_YEN/LOT;
+  const ly=priceY(lcPrice);
+  if(ly>CHART.y && ly<CHART.y+CHART.h){
+    ctx.strokeStyle=C.redD; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(CHART.x,px(ly)+.5); ctx.lineTo(CHART.x+CHART.w,px(ly)+.5); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle=C.redD; ctx.textAlign='right';
+    ctx.fillText("LOSSCUT", CHART.x+CHART.w-2, px(ly)-3);
+  }
+
+  const upto = state.phase==='play' ? state.idx
+             : Math.min(state.trade.n-1, state.revealN);
+  for(let i=0;i<state.trade.n;i++){
+    const ghost = i>state.idx; // candles after the cut = "what would've happened"
+    if(i>upto) continue;
+    const c=cs[i];
+    const up = c.close>=c.open;
+    const cx=CX(i);
+    const oY=priceY(c.open), clY=priceY(c.close), hY=priceY(c.hi), lY=priceY(c.lo);
+    let col = up?C.green:C.red;
+    if(i===state.idx && state.phase==='play') col = up?C.greenH:C.redH;
+    ctx.globalAlpha = ghost?0.32:1;
+    // wick
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px(cx)+.5,px(hY)); ctx.lineTo(px(cx)+.5,px(lY)); ctx.stroke();
+    // body
+    const top=Math.min(oY,clY), h=Math.max(3,Math.abs(clY-oY));
+    ctx.fillStyle=col; ctx.fillRect(px(cx-bw/2), px(top), px(bw), px(h));
+    // highlight pixel
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    ctx.fillRect(px(cx-bw/2), px(top), px(bw), 1);
+    ctx.globalAlpha=1;
+  }
+  // current price marker line
+  if(state.phase==='play'){
+    const pl=plAt(state.idx), z=gaugeZone(pl);
+    const cy=px(priceY(cs[state.idx].close))+.5;
+    const mc = pl>=0?C.green:(z==='red'?C.red:C.gold);
+    ctx.strokeStyle=mc; ctx.globalAlpha=.5; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(CX(state.idx),cy); ctx.lineTo(CHART.x+CHART.w,cy); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha=1;
+    // price tag
+    ctx.fillStyle=mc; ctx.fillRect(CHART.x+CHART.w-50, cy-7, 50, 14);
+    ctx.fillStyle=C.bg; ctx.font="8px 'Press Start 2P'"; ctx.textAlign='center';
+    ctx.fillText(cs[state.idx].close.toFixed(2), CHART.x+CHART.w-25, cy+3);
+  }
+}
+
+function drawPLbar(){
+  // P/L number top-left
+  const pl = state.trade && state.phase!=='title' ? plAt(state.cut?Math.min(state.idx,state.trade.n-1):state.idx):0;
+  const z=gaugeZone(pl);
+  ctx.textAlign='left';
+  ctx.font="8px "+CJK; ctx.fillStyle=C.dim;
+  ctx.fillText("帳面損益", 14, 22);
+  const col = pl>=0?C.greenH:(z==='red'?C.redH:C.gold);
+  ctx.font="14px 'Press Start 2P'"; ctx.fillStyle=col;
+  ctx.fillText(yen(pl), 14, 38);
+
+  // danger gauge (right top)
+  const gx=210, gy=14, gw=136, gh=10;
+  ctx.fillStyle='#15193a'; ctx.fillRect(gx,gy,gw,gh);
+  ctx.strokeStyle=C.line; ctx.strokeRect(gx+.5,gy+.5,gw-1,gh-1);
+  const r=Math.min(1, Math.max(0, -pl/LOSSCUT_YEN));
+  if(pl>=0){
+    const pr=Math.min(1, pl/ (LOSSCUT_YEN));
+    ctx.fillStyle=C.green; ctx.fillRect(gx,gy,gw*pr,gh);
+  } else {
+    const c = z==='red'?C.red:C.gold;
+    ctx.fillStyle=c; ctx.fillRect(gx,gy,gw*r,gh);
+    if(z==='red'){ ctx.fillStyle=C.redH; ctx.fillRect(gx,gy,gw*r,2); }
+  }
+  ctx.font="7px 'Press Start 2P'"; ctx.textAlign='right'; ctx.fillStyle=C.dim;
+  ctx.fillText(pl>=0?"PROFIT":"DANGER", gx+gw, gy-3);
+}
+
+function drawCombo(){
+  if(state.combo<2) return;
+  const x=W-16, y=78;
+  if(state.fever){ ctx.textAlign='right'; ctx.font="9px 'Press Start 2P'";
+    ctx.fillStyle=Math.sin(state.t*0.5)>0?C.gold:'#fff3c0'; ctx.fillText("★FEVER x2★", x, y-14); }
+  const big=state.combo>=6;
+  ctx.textAlign='right';
+  ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=big?C.gold:C.greenH;
+  ctx.fillText("COMBO", x, y);
+  const pulse=1+0.12*Math.sin(state.t*0.4);
+  ctx.save(); ctx.translate(x,y+20); ctx.scale(pulse,pulse);
+  ctx.font="22px 'Press Start 2P'"; ctx.fillStyle=big?C.gold:C.greenH;
+  ctx.strokeStyle=big?C.goldD:C.greenD; ctx.lineWidth=3;
+  const cvv=Math.min(10,state.combo);
+  ctx.strokeText(cvv+'x',0,0); ctx.fillText(cvv+'x',0,0);
+  ctx.restore();
+}
+
+// ----- mascot (boy) -----
+function drawMascot(){
+  const mx=48, my=314, expr=state.mascot.expr;
+  ctx.save(); ctx.translate(mx,my);
+  const bob=Math.sin(state.t*0.15)*2; ctx.translate(0,bob);
+  if(expr==='panic') ctx.translate(Math.sin(state.t*1.6)*1.4,0);
+  if(expr==='dizzy') ctx.rotate(Math.sin(state.t*0.4)*0.06);
+
+  const skin='#f6c79a', hair='#4a3322', shirt='#2f8fdc';
+  const hy=-18;
+
+  // shirt / torso
+  ctx.fillStyle=shirt;
+  ctx.beginPath(); ctx.moveTo(-12,18); ctx.lineTo(-10,1); ctx.quadraticCurveTo(0,-3,10,1); ctx.lineTo(12,18); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#256fb0'; ctx.fillRect(-4,-2,8,4); // collar
+  // arms + skin hands
+  ctx.fillStyle=shirt;
+  if(expr==='cool'){
+    ctx.fillRect(9,1,4,8); ctx.fillStyle=skin; ctx.beginPath(); ctx.arc(11,-1,3.4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=shirt; ctx.fillRect(-13,8,4,8); ctx.fillStyle=skin; ctx.beginPath(); ctx.arc(-11,17,3,0,Math.PI*2); ctx.fill();
+  } else if(expr==='panic'){
+    ctx.fillRect(-14,1,4,8); ctx.fillRect(10,1,4,8);
+    ctx.fillStyle=skin; ctx.beginPath(); ctx.arc(-12,0,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(12,0,3,0,Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillRect(-13,6,4,9); ctx.fillRect(9,6,4,9);
+    ctx.fillStyle=skin; ctx.beginPath(); ctx.arc(-11,16,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(11,16,3,0,Math.PI*2); ctx.fill();
+  }
+
+  // hair (behind face) + spikes
+  ctx.fillStyle=hair;
+  ctx.beginPath(); ctx.ellipse(0,hy-3,14,13,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-8,hy-13); ctx.lineTo(-4,hy-18); ctx.lineTo(-1,hy-13);
+  ctx.lineTo(2,hy-13); ctx.lineTo(5,hy-18); ctx.lineTo(9,hy-12); ctx.closePath(); ctx.fill();
+  // face
+  ctx.fillStyle=skin;
+  ctx.beginPath(); ctx.ellipse(0,hy+2,12,12,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-12.5,hy+3,2.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(12.5,hy+3,2.4,0,Math.PI*2); ctx.fill();
+
+  if(expr==='cool'){
+    ctx.fillStyle='#15151c'; ctx.fillRect(-10,hy-2,8,5); ctx.fillRect(2,hy-2,8,5); ctx.fillRect(-2,hy,4,2);
+    ctx.fillStyle='#fff'; ctx.fillRect(-9,hy-1,2,1); ctx.fillRect(3,hy-1,2,1);
+    ctx.strokeStyle='#7a3b2e'; ctx.lineWidth=1.6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(0,hy+7,4,0.12*Math.PI,0.88*Math.PI); ctx.stroke();
+  } else if(expr==='dizzy'){
+    ctx.strokeStyle='#3a2a22'; ctx.lineWidth=1.6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-9,hy-2);ctx.lineTo(-4,hy+1);ctx.lineTo(-9,hy+4);
+    ctx.moveTo(9,hy-2);ctx.lineTo(4,hy+1);ctx.lineTo(9,hy+4); ctx.stroke();
+    ctx.strokeStyle='#7a3b2e'; ctx.beginPath(); ctx.moveTo(-3,hy+9);ctx.quadraticCurveTo(0,hy+7,3,hy+9); ctx.stroke();
+  } else {
+    const big = expr==='panic';
+    // eyebrows (make it read as a boy + show emotion)
+    ctx.strokeStyle='#3a2a22'; ctx.lineWidth=1.8; ctx.lineCap='round';
+    ctx.beginPath();
+    if(big){ ctx.moveTo(-9,hy-6);ctx.lineTo(-4,hy-7); ctx.moveTo(4,hy-7);ctx.lineTo(9,hy-6); }
+    else if(expr==='sweat'){ ctx.moveTo(-9,hy-7);ctx.lineTo(-4,hy-5); ctx.moveTo(4,hy-5);ctx.lineTo(9,hy-7); }
+    else { ctx.moveTo(-9,hy-5);ctx.lineTo(-4,hy-6); ctx.moveTo(4,hy-6);ctx.lineTo(9,hy-5); }
+    ctx.stroke();
+    // eyes
+    const er=big?4.4:3.6, pr=big?1.4:2, pyo= expr==='sweat'?-1:0;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.ellipse(-5,hy,er-1,er,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(5,hy,er-1,er,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2a1c14';
+    ctx.beginPath(); ctx.arc(-5,hy+pyo,pr,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5,hy+pyo,pr,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-6,hy-1+pyo,0.9,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(4,hy-1+pyo,0.9,0,Math.PI*2); ctx.fill();
+    // mouth
+    ctx.strokeStyle='#7a3b2e'; ctx.lineWidth=1.6; ctx.lineCap='round';
+    if(big){ ctx.fillStyle='#6a241f'; ctx.beginPath(); ctx.ellipse(0,hy+8,2.6,3,0,0,Math.PI*2); ctx.fill(); }
+    else if(expr==='sweat'){ ctx.beginPath(); ctx.moveTo(-3,hy+8);ctx.lineTo(3,hy+8); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.arc(0,hy+6,3.4,0.1*Math.PI,0.9*Math.PI); ctx.stroke(); }
+    // sweat drop
+    if(expr==='sweat'||big){ ctx.fillStyle='#5bc8ff'; const sy=hy-8+Math.sin(state.t*0.3)*2;
+      ctx.beginPath(); ctx.ellipse(11,sy,2.2,3.2,0,0,Math.PI*2); ctx.fill(); }
+  }
+  ctx.restore();
+  ctx.fillStyle=C.goldD; ctx.font="7px 'Press Start 2P'"; ctx.textAlign='center';
+  ctx.fillText("PEP", mx, my+20);
+}
+
+// ----- particles / floats / slash -----
+function drawParticles(){
+  for(let i=state.particles.length-1;i>=0;i--){ const p=state.particles[i];
+    p.t++; p.vy+=p.g; p.x+=p.vx; p.y+=p.vy;
+    const a=1-p.t/p.life; if(a<=0){state.particles.splice(i,1); continue;}
+    ctx.globalAlpha=a;
+    if(p.type==='coin'){
+      ctx.fillStyle=C.gold; ctx.fillRect(px(p.x-p.r),px(p.y-p.r),px(p.r*2),px(p.r*2));
+      ctx.fillStyle=C.goldD; ctx.fillRect(px(p.x-p.r),px(p.y-p.r),px(p.r*2),1);
+      ctx.fillStyle='#fff6c0'; ctx.fillRect(px(p.x-1),px(p.y-p.r),1,px(p.r*2));
+    } else { ctx.fillStyle=p.col; ctx.fillRect(px(p.x-2),px(p.y-2),4,4); }
+    ctx.globalAlpha=1;
+  }
+  for(let i=state.floats.length-1;i>=0;i--){ const f=state.floats[i]; f.t++; f.y-=0.7;
+    const a=1-f.t/f.life; if(a<=0){state.floats.splice(i,1);continue;}
+    ctx.globalAlpha=a; ctx.font="10px "+CJK; ctx.textAlign='center';
+    ctx.fillStyle='#000'; ctx.fillText(f.txt,f.x+1,f.y+1);
+    ctx.fillStyle=f.col; ctx.fillText(f.txt,f.x,f.y); ctx.globalAlpha=1;
+  }
+  if(state.slash){ const s=state.slash; s.t++;
+    const a=1-s.t/10; if(a<=0){state.slash=null;}
+    else{ ctx.globalAlpha=a; ctx.strokeStyle=C.white; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(s.x-26,CHART.y+10); ctx.lineTo(s.x+26,CHART.y+CHART.h-10); ctx.stroke();
+      ctx.globalAlpha=1; }
+  }
+}
+
+function drawPopup(){
+  if(!state.popup) return; const p=state.popup; p.t0++;
+  // pattern name (what structure this was)
+  if(state.trade && state.trade.label){ ctx.textAlign='center'; ctx.font="9px "+CJK;
+    ctx.fillStyle=C.dim; ctx.fillText("【"+state.trade.label.jp+" / "+state.trade.label.en+"】", W/2, 92); }
+  const pop=Math.min(1,p.t0/8); const sc=pop<1? 0.6+0.4*pop + (pop>0.7?0.15*Math.sin((pop)*6):0):1;
+  ctx.save(); ctx.translate(W/2,118); ctx.scale(sc,sc); ctx.textAlign='center';
+  ctx.font="20px "+CJK; ctx.lineWidth=4; ctx.strokeStyle='#000';
+  ctx.strokeText(p.t,0,0); ctx.fillStyle=p.col; ctx.fillText(p.t,0,0);
+  ctx.font="11px "+CJK; ctx.strokeText(p.sub,0,22); ctx.fillStyle=C.txt; ctx.fillText(p.sub,0,22);
+  ctx.restore();
+  // result numbers
+  const r=state.result;
+  ctx.textAlign='center'; ctx.font="11px 'Press Start 2P'";
+  if(r){
+    ctx.fillStyle = r.pl>=0?C.greenH:C.redH;
+    ctx.fillText((r.pl>=0?'+':'')+yen(r.pl), W/2, 168);
+    if(r.kind==='goodcut'){
+      ctx.font="9px "+CJK; ctx.fillStyle=C.gold;
+      ctx.fillText("若續抱會是 "+yen(r.finalPL), W/2, 188);
+    } else if(r.kind==='early'){
+      ctx.font="9px "+CJK; ctx.fillStyle=C.redH;
+      ctx.fillText("若續抱會是 "+yen(r.finalPL), W/2, 188);
+    } else if(r.kind==='losscut'){
+      ctx.font="9px "+CJK; ctx.fillStyle=C.dim;
+      ctx.fillText("早點砍就好了…", W/2, 188);
+      if(state.consecLosscut>=2){
+        const bl=Math.sin(state.t*0.4)>0;
+        ctx.font="10px "+CJK; ctx.fillStyle=bl?C.redH:C.red;
+        ctx.fillText("現實 → 凹單虧掉了 "+yen(-state.denialLost), W/2, 208);
+      }
+    } else if(r.kind==='loss'){
+      ctx.font="9px "+CJK; ctx.fillStyle=C.dim;
+      ctx.fillText("抱到最後賠錢了", W/2, 188);
+    } else if(r.kind==='early_tp'){
+      ctx.font="9px "+CJK; ctx.fillStyle=C.redH;
+      ctx.fillText("若續抱會是 "+yen(r.finalPL), W/2, 188);
+    } else if(r.kind==='profit'){
+      ctx.font="9px "+CJK; ctx.fillStyle=C.greenH;
+      ctx.fillText("時機抓得好，獲利了結！", W/2, 188);
+    }
+    if(r.pts>0){ ctx.font="8px 'Press Start 2P'"; ctx.fillStyle=C.gold;
+      ctx.fillText("+"+r.pts+" pts", W/2, 206); }
+  }
+  ctx.font="8px 'Press Start 2P'"; ctx.fillStyle=C.dim;
+  if(p.t0>22){ const bl=Math.sin(state.t*0.3)>0;
+    if(bl) ctx.fillText("PRESS ▶ / SPACE", W/2, 230); }
+}
+
+// ---------- screens ----------
+function drawTitle(){
+  // animated bg candles
+  ctx.globalAlpha=.25;
+  for(let i=0;i<10;i++){ const x=20+i*34, up=Math.sin(state.t*0.05+i)>0;
+    const h=10+Math.abs(Math.sin(state.t*0.04+i*1.3))*40, y=150+Math.sin(state.t*0.03+i)*20;
+    ctx.fillStyle=up?C.green:C.red; ctx.fillRect(x,y,12,h); }
+  ctx.globalAlpha=1;
+  ctx.textAlign='center';
+  // title
+  ctx.font="30px "+CJK; ctx.lineWidth=5; ctx.strokeStyle='#000';
+  ctx.strokeText("停損大師", W/2, 110);
+  const grad=ctx.createLinearGradient(0,80,0,120); grad.addColorStop(0,C.goldD); grad.addColorStop(.5,C.gold); grad.addColorStop(1,'#fff3c0');
+  ctx.fillStyle=grad; ctx.fillText("停損大師", W/2, 110);
+  ctx.font="11px 'Press Start 2P'"; ctx.fillStyle=C.greenH;
+  ctx.fillText("LOSS CUT MASTER", W/2, 138);
+  ctx.font="9px "+CJK; ctx.fillStyle=C.dim;
+  ctx.fillText("K線就是敵人。該砍就砍。", W/2, 200);
+  ctx.fillText("帳面虧損瞬間就會膨脹。", W/2, 218);
+  const bl=Math.sin(state.t*0.2)>0;
+  if(bl){ ctx.font="10px 'Press Start 2P'"; ctx.fillStyle=C.gold; ctx.fillText("PRESS START", W/2, 270); }
+  if(best.score>0){ ctx.font="8px 'Press Start 2P',"+CJK; ctx.fillStyle=C.goldD;
+    ctx.fillText("BEST  "+best.score.toLocaleString()+"  ["+rankOf(best.score)+"]", W/2, 240); }
+}
+function drawStageIntro(){
+  state.stageClock++;
+  const names={1:'急跌 / SHARP DROP',2:'假突破 / FAKEOUT',3:'陰跌 / SLOW BLEED',4:'劇烈震盪 / WHIPSAW'};
+  const nm=names[((state.stage-1)%4)+1];
+  ctx.textAlign='center';
+  if(state.stage>1){ ctx.font="11px 'Press Start 2P'"; ctx.fillStyle=C.greenH;
+    ctx.fillText("STAGE CLEAR  +"+state.stageBonus, W/2, 116); }
+  ctx.font="14px 'Press Start 2P'"; ctx.fillStyle=C.gold;
+  ctx.fillText("STAGE "+state.stage, W/2, 150);
+  ctx.font="13px "+CJK; ctx.fillStyle=C.txt; ctx.fillText(nm, W/2, 180);
+  ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=C.gold; ctx.fillText("SCORE "+state.score.toLocaleString(), W/2, 206);
+  const bl=Math.sin(state.t*0.25)>0;
+  if(state.stageClock>40 && bl){ ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=C.dim; ctx.fillText("PRESS ▶", W/2, 220); }
+}
+function drawGameOver(){
+  ctx.textAlign='center';
+  ctx.font="22px "+CJK; ctx.fillStyle=C.redH; ctx.lineWidth=4; ctx.strokeStyle='#000';
+  ctx.strokeText("GAME OVER", W/2, 70); ctx.fillText("GAME OVER", W/2, 70);
+  // rank stamp
+  const rkc=rankColor(state.rank);
+  ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=C.dim; ctx.fillText("RANK", W/2, 102);
+  const sc=1+0.08*Math.sin(state.t*0.2);
+  const L=state.rank.length, rfs=L<=1?46:L===2?38:L===3?30:L===4?24:20;  // shrink for SS/SSS/★★★★★
+  ctx.save(); ctx.translate(W/2,140); ctx.scale(sc,sc);
+  ctx.font=rfs+"px 'Press Start 2P',"+CJK; ctx.strokeStyle='#000'; ctx.lineWidth=5;
+  ctx.strokeText(state.rank,0,16); ctx.fillStyle=rkc; ctx.fillText(state.rank,0,16);
+  ctx.restore();
+  // record line (between rank stamp and stats)
+  ctx.textAlign='center';
+  if(state.newRecord){ const bl=Math.sin(state.t*0.35)>0;
+    ctx.font="11px 'Press Start 2P'"; ctx.fillStyle=bl?C.gold:'#fff3c0';
+    ctx.fillText("★ NEW RECORD ★", W/2, 176);
+  } else if(best.score>0){ ctx.font="8px 'Press Start 2P'"; ctx.fillStyle=C.goldD;
+    ctx.fillText("BEST  "+best.score.toLocaleString(), W/2, 176); }
+  // stats
+  ctx.font="9px 'Press Start 2P'"; ctx.textAlign='left';
+  const lx=70, rx=W-70; let y=190;
+  const row=(a,b,col)=>{ ctx.fillStyle=C.dim; ctx.textAlign='left'; ctx.font="9px "+CJK; ctx.fillText(a,lx,y);
+    ctx.fillStyle=col||C.txt; ctx.textAlign='right'; ctx.font="9px 'Press Start 2P'"; ctx.fillText(b,rx,y); y+=22; };
+  row("SCORE", state.score.toLocaleString(), C.gold);
+  row("餘額", yen(state.cash), state.cash>=START_CASH?C.greenH:C.redH);
+  row("停損成功率", state.cutRate+"%", C.greenH);
+  row("MAX COMBO", Math.min(10,state.maxCombo)+"x", C.greenH);
+  row("TRADES", state.tradesPlayed+"", C.txt);
+  const bl=Math.sin(state.t*0.2)>0;
+  if(bl){ ctx.textAlign='center'; ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=C.gold;
+    ctx.fillText("PRESS ▶ TO RETRY", W/2, 320); }
+}
+function drawHowto(){
+  ctx.fillStyle='rgba(6,8,20,.92)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center'; ctx.font="13px 'Press Start 2P'"; ctx.fillStyle=C.gold;
+  ctx.fillText("HOW TO PLAY", W/2, 44);
+  ctx.textAlign='left'; ctx.font="11px "+CJK; ctx.fillStyle=C.txt;
+  const lines=[
+    "K線會一根一根揭開。",
+    "你目前持有多單。",
+    "",
+    "■ 續抱 … 看下一根（讓利潤跑）",
+    "■ 砍倉 … 立刻平倉結算",
+    "",
+    "漲是綠＝帳面獲利／跌是紅＝帳面虧損。",
+    "DANGER 量表轉紅充滿時",
+    "會強制停損 → LIFE -1。",
+    "",
+    "偶爾會發生經濟指標衝擊，",
+    "瞬間急漲或急跌。",
+    "",
+    "賺要讓它跑，賠要趁早砍。",
+    "這就是停損大師。",
+  ];
+  let y=72; ctx.fillStyle=C.txt;
+  for(const l of lines){ ctx.fillStyle = l.startsWith("■")?C.gold:(l==="這就是停損大師。"?C.greenH:C.txt);
+    ctx.fillText(l, 30, y); y+=17; }
+  const bl=Math.sin(state.t*0.25)>0;
+  if(bl){ ctx.textAlign='center'; ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=C.dim;
+    ctx.fillText("TAP TO CLOSE", W/2, 332); }
+}
+
+// ---------- helpers ----------
+function yen(v){ const s=v<0?'-':''; const n=Math.round(Math.abs(v)).toLocaleString(); return s+'¥'+n; }
+
+// ---------- main loop ----------
+function drawScores(){
+  ctx.fillStyle='rgba(6,8,20,.94)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center'; ctx.font="13px 'Press Start 2P'"; ctx.fillStyle=C.gold;
+  ctx.fillText("RANKING", W/2, 42);
+  ctx.font="11px "+CJK; ctx.fillStyle=C.dim; ctx.fillText("分數排行 TOP 5", W/2, 62);
+  let y=102;
+  for(let i=0;i<5;i++){ const e=scores[i];
+    ctx.textAlign='left'; ctx.font="14px 'Press Start 2P'"; ctx.fillStyle=i===0?C.gold:C.dim;
+    ctx.fillText(String(i+1), 44, y);
+    if(e){
+      ctx.textAlign='right'; ctx.font="14px 'Press Start 2P'"; ctx.fillStyle=C.txt;
+      ctx.fillText(e.score.toLocaleString(), 240, y);
+      const er=rankOf(e.score);
+      ctx.textAlign='left'; ctx.font="11px 'Press Start 2P',"+CJK; ctx.fillStyle=rankColor(er);
+      ctx.fillText(er, 262, y);
+    } else {
+      ctx.textAlign='right'; ctx.font="12px 'Press Start 2P'"; ctx.fillStyle='#2a2f55';
+      ctx.fillText("-----", 240, y);
+    }
+    y+=42;
+  }
+  const bl=Math.sin(state.t*0.25)>0;
+  if(bl){ ctx.textAlign='center'; ctx.font="9px 'Press Start 2P'"; ctx.fillStyle=C.dim; ctx.fillText("TAP TO CLOSE", W/2, 322); }
+}
+let showHowto=false, showScores=false;
+function frame(){
+  state.t++;
+  if(state.phase==='play'){ state.idle++;
+    // danger heartbeat
+    if(state.trade){ const z=gaugeZone(plAt(state.idx));
+      if(z==='red'){ state.heartT++; if(state.heartT%34===0) sfx.heart(); } else state.heartT=0; }
+  }
+  // reveal timing
+  if(state.phase==='reveal'){
+    state.revealClock++;
+    // animate remaining ghost candles drawing in
+    if(state.revealClock%4===0 && state.revealN<state.trade.n-1) state.revealN++;
+  }
+
+  // screen shake
+  let sx=0, sy=0;
+  if(state.shake>0){ sx=(Math.random()-0.5)*state.shake; sy=(Math.random()-0.5)*state.shake; state.shake*=0.85; if(state.shake<0.5)state.shake=0; }
+
+  clear();
+  ctx.save(); ctx.translate(sx,sy);
+
+  if(state.phase==='title'){ drawTitle(); }
+  else {
+    if(state.trade){ recalcRange(); drawGrid(); drawCandles(); drawPLbar(); drawMascot(); drawCombo(); }
+    drawParticles();
+    if(state.phase==='reveal') drawPopup();
+    if(state.phase==='stage') drawStageIntro();
+    if(state.phase==='over') drawGameOver();
+  }
+  ctx.restore();
+
+  // flash overlay
+  if(state.flash){ state.flash.a*=0.86; ctx.fillStyle=state.flash.c; ctx.globalAlpha=state.flash.a;
+    ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; if(state.flash.a<0.03) state.flash=null; }
+  // danger vignette
+  if(state.phase==='play' && state.trade && gaugeZone(plAt(state.idx))==='red'){
+    const a=0.18+0.1*Math.sin(state.t*0.5); ctx.save();
+    const g=ctx.createRadialGradient(W/2,H/2,80,W/2,H/2,260);
+    g.addColorStop(0,'rgba(255,40,60,0)'); g.addColorStop(1,'rgba(255,40,60,'+a+')');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H); ctx.restore();
+  }
+  if(showScores) drawScores();
+  if(showHowto) drawHowto();
+  // FEVER aura
+  if(state.fever && (state.phase==='play'||state.phase==='reveal') && !showHowto && !showScores){
+    const a=0.10+0.06*Math.sin(state.t*0.3);
+    ctx.fillStyle='rgba(255,204,61,'+a+')'; ctx.fillRect(0,0,W,7); ctx.fillRect(0,H-7,W,7);
+    ctx.strokeStyle='rgba(255,204,61,'+(0.4+0.3*Math.sin(state.t*0.4))+')'; ctx.lineWidth=3;
+    ctx.strokeRect(2,2,W-4,H-4);
+  }
+
+  // sync HUD
+  document.getElementById('hStage').textContent=state.stage;
+  document.getElementById('hAcct').textContent=yen(state.cash);
+  updateHearts();
+
+  requestAnimationFrame(frame);
+}
+function updateHearts(){
+  const el=document.getElementById('hHearts');
+  if(el.children.length!==3){ el.innerHTML='';
+    for(let i=0;i<3;i++){ const d=document.createElement('div'); d.className='heart';
+      ['tl','tr','bl','br'].forEach(q=>{ const s=document.createElement('div'); s.className='q '+q; d.appendChild(s); });
+      el.appendChild(d); } }
+  for(let i=0;i<3;i++){ const frac=Math.max(0,Math.min(1, state.lives-i)); const qr=Math.round(frac*4); // quarters left 0..4
+    const d=el.children[i]; d.classList.toggle('lit', qr>0);
+    // remove order as life drops: TR -> BR -> BL -> TL  (TL is the last to go)
+    d.children[0].style.opacity = qr>=1?1:0;  // tl
+    d.children[2].style.opacity = qr>=2?1:0;  // bl
+    d.children[3].style.opacity = qr>=3?1:0;  // br
+    d.children[1].style.opacity = qr>=4?1:0;  // tr
+  }
+}
+
+// ---------- buttons / input ----------
+const btnPrim=document.getElementById('btnPrim');
+const btnCut=document.getElementById('btnCut');
+const btnHold=document.getElementById('btnHold');
+function setButtons(){
+  const p=state.phase;
+  const showPlay = p==='play';
+  btnCut.classList.toggle('hidden',!showPlay);
+  btnHold.classList.toggle('hidden',!showPlay);
+  btnPrim.classList.toggle('hidden',showPlay);
+  if(!showPlay){
+    const span=btnPrim.querySelector('.jp'), en=btnPrim.querySelector('.en');
+    if(p==='title'){ span.textContent='▶ 開始'; en.textContent='START'; }
+    else if(p==='reveal'){ span.textContent='▶ 下一手'; en.textContent='NEXT'; }
+    else if(p==='stage'){ span.textContent='▶ 開始'; en.textContent='GO'; }
+    else if(p==='over'){ span.textContent='▶ 再來一次'; en.textContent='RETRY'; }
+  }
+}
+function flashBtn(b){ b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+
+function primAction(){
+  initAudio(); sfx.click();
+  if(showHowto||showScores){ showHowto=false; showScores=false; return; }
+  switch(state.phase){
+    case 'title': state.phase='stage'; state.stageClock=0; sfx.stage(); setButtons(); break;
+    case 'stage': if(state.stageClock<10) return; startTrade(); break;
+    case 'reveal': if(state.revealClock<8) return; afterReveal(); break;
+    case 'over': resetGame(); state.phase='stage'; state.stageClock=0; sfx.stage(); setButtons(); break;
+  }
+}
+btnPrim.addEventListener('click',()=>{flashBtn(btnPrim); primAction();});
+btnCut.addEventListener('click',()=>{ if(showHowto||showScores){ showHowto=false; showScores=false; return; } flashBtn(btnCut); doCut(); });
+btnHold.addEventListener('click',()=>{ if(showHowto||showScores){ showHowto=false; showScores=false; return; } flashBtn(btnHold); nextCandle(); });
+
+document.getElementById('btnScore').addEventListener('click',()=>{ initAudio(); sfx.click(); showHowto=false; showScores=!showScores; });
+document.getElementById('btnHowto').addEventListener('click',()=>{ initAudio(); sfx.click(); showScores=false; showHowto=!showHowto; });
+cv.addEventListener('click',()=>{ if(showHowto)showHowto=false; if(showScores)showScores=false; });
+
+window.addEventListener('keydown',(e)=>{
+  if(showHowto||showScores){
+    if(['Space','Enter','Escape','ArrowDown','ArrowUp','ArrowRight','ArrowLeft','KeyS','KeyW','KeyD'].includes(e.code)){ showHowto=false; showScores=false; e.preventDefault(); }
+    return;
+  }
+  if(state.phase==='play'){
+    if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS'){ flashBtn(btnCut); doCut(); e.preventDefault(); }
+    else if(e.code==='ArrowUp'||e.code==='ArrowRight'||e.code==='Enter'||e.code==='KeyW'||e.code==='KeyD'){ flashBtn(btnHold); nextCandle(); e.preventDefault(); }
+  } else {
+    if(e.code==='Space'||e.code==='Enter'){ flashBtn(btnPrim); primAction(); e.preventDefault(); }
+  }
+});
+
+// start
+setButtons();
+// ensure fonts loaded before first paint of text-heavy title
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(()=>{}); }
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
